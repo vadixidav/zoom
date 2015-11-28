@@ -7,6 +7,12 @@ pub struct Cartesian1<D> {
     x: D
 }
 
+impl<D> Cartesian1<D> where D: Copy {
+    pub fn new(x: D) -> Self {
+        Cartesian1{x: x}
+    }
+}
+
 impl<D> Clone for Cartesian1<D> where D: Copy {
     fn clone(&self) -> Self {
         Cartesian1{x: self.x}
@@ -63,6 +69,9 @@ impl<D> Neg for Cartesian1<D>
 impl<D> Vector<D> for Cartesian1<D>
     where D: Float
 {
+    fn dot(self, rhs: Self) -> D {
+        self.x * rhs.x
+    }
     fn displacement(&self) -> D {
         self.x
     }
