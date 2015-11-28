@@ -1,7 +1,9 @@
 pub mod cartesian1;
 pub mod cartesian2;
+pub mod cartesian3;
 pub use self::cartesian1::*;
 pub use self::cartesian2::*;
+pub use self::cartesian3::*;
 
 extern crate num;
 use self::num::Float;
@@ -12,7 +14,7 @@ pub trait Vector<D>: Sized + Clone + Copy + Add<Self, Output=Self> + Sub<Self, O
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
 {
-    fn dot(self, rhs: Self) -> D;
+    fn dot(self, rhs: &Self) -> D;
     fn displacement(&self) -> D;
     fn normalized(&self) -> Self {
         *self / self.displacement()
