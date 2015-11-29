@@ -15,12 +15,6 @@ impl<D> Cartesian3<D> where D: Copy {
     }
 }
 
-impl<D> Cartesian3<D> where D: Float {
-    fn displacement_squared(&self) -> D {
-        self.x * self.x + self.y * self.y + self.z * self.z
-    }
-}
-
 impl<D> Clone for Cartesian3<D> where D: Copy {
     fn clone(&self) -> Self {
         Cartesian3{x: self.x, y: self.y, z: self.z}
@@ -82,6 +76,9 @@ impl<D> Vector<D> for Cartesian3<D>
     }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()
+    }
+    fn displacement_squared(&self) -> D {
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 }
 

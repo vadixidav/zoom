@@ -1,0 +1,7 @@
+[package]
+name = "zoom"
+version = "0.8.0"
+authors = ["Geordon Worley <vadixidav@gmail.com>"]
+
+[dependencies]
+num = "*"

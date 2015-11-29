@@ -16,6 +16,9 @@ pub trait Vector<D>: Sized + Clone + Copy + Add<Self, Output=Self> + Sub<Self, O
 {
     fn dot(&self, rhs: &Self) -> D;
     fn displacement(&self) -> D;
+    fn displacement_squared(&self) -> D {
+        self.displacement().powi(2)
+    }
     fn normalized(&self) -> Self {
         *self / self.displacement()
     }

@@ -14,12 +14,6 @@ impl<D> Cartesian2<D> where D: Copy {
     }
 }
 
-impl<D> Cartesian2<D> where D: Float {
-    fn displacement_squared(&self) -> D {
-        self.x * self.x + self.y * self.y
-    }
-}
-
 impl<D> Clone for Cartesian2<D> where D: Copy {
     fn clone(&self) -> Self {
         Cartesian2{x: self.x, y: self.y}
@@ -81,5 +75,8 @@ impl<D> Vector<D> for Cartesian2<D>
     }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()
+    }
+    fn displacement_squared(&self) -> D {
+        self.x * self.x + self.y * self.y
     }
 }
