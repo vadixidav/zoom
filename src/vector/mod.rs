@@ -6,11 +6,11 @@ pub use self::cartesian2::*;
 pub use self::cartesian3::*;
 
 extern crate num;
-use self::num::Float;
+use self::num::{Float, Zero};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 //Trait that implements all the functions necessary for any n-dimensional particle
-pub trait Vector<D>: Sized + Clone + Copy + Add<Self, Output=Self> + Sub<Self, Output=Self> + Neg<Output=Self> +
+pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<Self, Output=Self> + Neg<Output=Self> +
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
 {

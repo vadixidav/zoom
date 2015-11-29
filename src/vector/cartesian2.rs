@@ -1,6 +1,6 @@
 extern crate num;
 use super::Vector;
-use self::num::Float;
+use self::num::{Float, Zero};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 pub struct Cartesian2<D> {
@@ -11,6 +11,18 @@ pub struct Cartesian2<D> {
 impl<D> Cartesian2<D> where D: Copy {
     pub fn new(x: D, y: D) -> Self {
         Cartesian2{x: x, y: y}
+    }
+}
+
+impl<D> Zero for Cartesian2<D>
+    where D: Float
+{
+    fn zero() -> Self {
+        Cartesian2{x: D::zero(), y: D::zero()}
+    }
+
+    fn is_zero(&self) -> bool {
+        self.x.is_zero() && self.y.is_zero()
     }
 }
 
