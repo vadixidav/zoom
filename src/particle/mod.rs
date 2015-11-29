@@ -12,9 +12,14 @@ pub trait Quanta<D>
 pub trait Particle<V, D>
     where V: Vector<D>, D: Float
 {
+    //Get position of particle
     fn position(&self) -> V;
+    //Get velocity of particle
     fn velocity(&self) -> V;
-    fn accelerate(&mut self, vec: V);
+    //Accelerate particle
+    fn accelerate(&mut self, vec: &V);
+    //Advance particle (update position and velocity)
+    fn advance(&mut self);
 }
 
 pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
@@ -35,10 +40,10 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
         //Accelerate lhs in the direction of force and divide it by the inertia
         let acceleration = force / lhs.inertia();
-        lhs.accelerate(acceleration);
+        lhs.accelerate(&acceleration);
         //Apply the inverse force to the rhs similarly
         let acceleration = -force / rhs.inertia();
-        rhs.accelerate(acceleration);
+        rhs.accelerate(&acceleration);
     }
 
     //Apply proper attraction to a single physics particle towards a location and with a magnitude
@@ -47,7 +52,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
         let delta = location - self.position();
         let distance = delta.displacement();
         let acceleration = delta / distance.powi(3) * magnitude * self.quanta() / self.inertia();
-        self.accelerate(acceleration);
+        self.accelerate(&acceleration);
     }
 
     //Apply spring forces between two particles with specified equilibrium distance
@@ -59,9 +64,9 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
             (delta.displacement() - equilibrium) *
             lhs.quanta() * rhs.quanta();
         let acceleration = force / lhs.inertia();
-        lhs.accelerate(acceleration);
+        lhs.accelerate(&acceleration);
         let acceleration = -force / rhs.inertia();
-        rhs.accelerate(acceleration);
+        rhs.accelerate(&acceleration);
     }
 
     //Apply spring forces between one particle and a position with an equilibrium and magnitude
@@ -69,7 +74,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
         let delta = location - self.position();
         let acceleration = delta.normalized() * (delta.displacement() - equilibrium) *
             magnitude * self.quanta() / self.inertia();
-        self.accelerate(acceleration);
+        self.accelerate(&acceleration);
     }
 
     //Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity
@@ -81,15 +86,15 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
         let force = rhs.velocity().cross(&lhs.velocity().cross(&delta)) * lhs.quanta() * rhs.quanta() / distance.powi(3);
 
         let acceleration = -force / lhs.inertia();
-        lhs.accelerate(acceleration);
+        lhs.accelerate(&acceleration);
         let acceleration = force / rhs.inertia();
-        rhs.accelerate(acceleration);
+        rhs.accelerate(&acceleration);
     }
 
     fn lorentz_field(&mut self, field: &V)
         where V: CrossVector<D>
     {
         let acceleration = self.velocity().cross(field) * self.quanta() / self.inertia();
-        self.accelerate(acceleration);
+        self.accelerate(&acceleration);
     }
 }
