@@ -4,8 +4,8 @@ use self::num::{Float, Zero};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 pub struct Cartesian2<D> {
-    x: D,
-    y: D,
+    pub x: D,
+    pub y: D,
 }
 
 impl<D> Cartesian2<D> where D: Copy {

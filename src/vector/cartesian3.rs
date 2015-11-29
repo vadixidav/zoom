@@ -4,9 +4,9 @@ use self::num::{Float, Zero};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 pub struct Cartesian3<D> {
-    x: D,
-    y: D,
-    z: D,
+    pub x: D,
+    pub y: D,
+    pub z: D,
 }
 
 impl<D> Cartesian3<D> where D: Copy {

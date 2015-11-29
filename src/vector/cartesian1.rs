@@ -4,7 +4,7 @@ use self::num::{Float, Zero};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 pub struct Cartesian1<D> {
-    x: D
+    pub x: D
 }
 
 impl<D> Cartesian1<D> where D: Copy {
