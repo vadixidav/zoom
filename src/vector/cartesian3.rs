@@ -1,5 +1,5 @@
 extern crate num;
-use super::Vector;
+use super::{Vector, CrossVector};
 use self::num::Float;
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
@@ -77,10 +77,22 @@ impl<D> Neg for Cartesian3<D>
 impl<D> Vector<D> for Cartesian3<D>
     where D: Float
 {
-    fn dot(self, rhs: &Self) -> D {
+    fn dot(&self, rhs: &Self) -> D {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()
+    }
+}
+
+impl <D> CrossVector<D> for Cartesian3<D>
+    where D: Float
+{
+    fn cross(&self, rhs: &Self) -> Self {
+        Cartesian3{
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+        }
     }
 }

@@ -14,7 +14,7 @@ pub trait Vector<D>: Sized + Clone + Copy + Add<Self, Output=Self> + Sub<Self, O
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
 {
-    fn dot(self, rhs: &Self) -> D;
+    fn dot(&self, rhs: &Self) -> D;
     fn displacement(&self) -> D;
     fn normalized(&self) -> Self {
         *self / self.displacement()
@@ -22,4 +22,11 @@ pub trait Vector<D>: Sized + Clone + Copy + Add<Self, Output=Self> + Sub<Self, O
     fn normalize(&mut self) {
         *self = self.normalized();
     }
+}
+
+//CrossVector is a Vector that is of high enough dimension to have a cross product
+pub trait CrossVector<D>: Vector<D>
+    where D: Float
+{
+    fn cross(&self, rhs: &Self) -> Self;
 }
