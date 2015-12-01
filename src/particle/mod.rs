@@ -1,3 +1,6 @@
+pub mod basic_particle;
+pub use self::basic_particle::*;
+
 extern crate num;
 use self::num::Float;
 use super::vector::*;
@@ -29,7 +32,9 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     fn inertia(&self) -> D;
 
     //Apply proper attraction between two physics particles based on their quanta and position
-    fn gravitate(lhs: &mut Self, rhs: &mut Self) {
+    fn gravitate<T>(lhs: &mut Self, rhs: &mut T)
+        where T: PhysicsParticle<V, D>
+    {
         //Create delta vector between the two positions
         let delta = rhs.position() - lhs.position();
         //Find the distance of the delta vector
@@ -56,7 +61,9 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
     The radius is passed squared for internal efficiency reasons.
     */
-    fn gravitate_radius_squared(lhs: &mut Self, rhs: &mut Self, radius_squared: D) {
+    fn gravitate_radius_squared<T>(lhs: &mut Self, rhs: &mut T, radius_squared: D)
+        where T: PhysicsParticle<V, D>
+    {
         let delta = rhs.position() - lhs.position();
         let distance_squared = delta.displacement_squared();
         //Force is the only thing that changes from normal gravitation
@@ -73,8 +80,10 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
     //This function exists so that if an optimization is possible later, it can be specially implemented.
     //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
-    fn gravitate_radius(lhs: &mut Self, rhs: &mut Self, radius: D) {
-        Self::gravitate_radius_squared(lhs, rhs, radius);
+    fn gravitate_radius<T>(lhs: &mut Self, rhs: &mut T, radius: D)
+        where T: PhysicsParticle<V, D>
+    {
+        Self::gravitate_radius_squared(lhs, rhs, radius * radius);
     }
 
     //Apply proper attraction to a single physics particle towards a location and with a magnitude
@@ -105,11 +114,13 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     //This function exists so that if an optimization is possible later, it can be specially implemented.
     //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
     fn gravitate_radius_to(&mut self, location: V, magnitude: D, radius: D) {
-        self.gravitate_radius_squared_to(location, magnitude, radius);
+        self.gravitate_radius_squared_to(location, magnitude, radius * radius);
     }
 
     //Apply spring forces between two particles
-    fn hooke(lhs: &mut Self, rhs: &mut Self) {
+    fn hooke<T>(lhs: &mut Self, rhs: &mut T)
+        where T: PhysicsParticle<V, D>
+    {
         let delta = rhs.position() - lhs.position();
         let force = delta.normalized() * delta.displacement() * lhs.quanta() * rhs.quanta();
         let acceleration = force / lhs.inertia();
@@ -119,7 +130,9 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply spring forces between two particles with specified equilibrium distance
-    fn hooke_equilibrium(lhs: &mut Self, rhs: &mut Self, equilibrium: D) {
+    fn hooke_equilibrium<T>(lhs: &mut Self, rhs: &mut T, equilibrium: D)
+        where T: PhysicsParticle<V, D>
+    {
         let delta = rhs.position() - lhs.position();
         let force = delta.normalized() *
             //We scale such that if displacement is greater than equilibrium, the particles attract proportionally
@@ -149,8 +162,8 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity
-    fn lorentz(lhs: &mut Self, rhs: &mut Self)
-        where V: CrossVector<D>
+    fn lorentz<T>(lhs: &mut Self, rhs: &mut T)
+        where V: CrossVector<D>, T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance = delta.displacement();
@@ -163,8 +176,8 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply lorentz forces between two PhysicsParticle objects with a radius_squared
-    fn lorentz_radius_squared(lhs: &mut Self, rhs: &mut Self, radius_squared: D)
-        where V: CrossVector<D>
+    fn lorentz_radius_squared<T>(lhs: &mut Self, rhs: &mut T, radius_squared: D)
+        where V: CrossVector<D>, T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance_squared = delta.displacement_squared();
@@ -179,6 +192,14 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
         lhs.accelerate(&acceleration);
         let acceleration = force / rhs.inertia();
         rhs.accelerate(&acceleration);
+    }
+
+    //This function exists so that if an optimization is possible later, it can be specially implemented.
+    //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
+    fn lorentz_radius<T>(lhs: &mut Self, rhs: &mut T, radius: D)
+        where V: CrossVector<D>, T: PhysicsParticle<V, D>
+    {
+        Self::lorentz_radius_squared(lhs, rhs, radius * radius);
     }
 
     //Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field
