@@ -27,7 +27,7 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
     }
 }
 
-//CrossVector is a Vector that is of high enough dimension to have a cross product
+//CrossVector is a Vector that has dimensions such that the cross product can be computed
 pub trait CrossVector<D>: Vector<D>
     where D: Float
 {
