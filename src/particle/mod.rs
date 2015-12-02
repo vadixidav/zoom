@@ -167,7 +167,8 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     {
         let delta = rhs.position() - lhs.position();
         let distance = delta.displacement();
-        let force = rhs.velocity().cross(&lhs.velocity().cross(&delta)) * lhs.quanta() * rhs.quanta() / distance.powi(3);
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) *
+            lhs.quanta() * rhs.quanta() / distance.powi(3);
 
         let acceleration = -force / lhs.inertia();
         lhs.accelerate(&acceleration);
@@ -181,7 +182,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     {
         let delta = rhs.position() - lhs.position();
         let distance_squared = delta.displacement_squared();
-        let force = rhs.velocity().cross(&lhs.velocity().cross(&delta)) * lhs.quanta() * rhs.quanta() /
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * lhs.quanta() * rhs.quanta() /
             if distance_squared > radius_squared {
                 distance_squared.sqrt().powi(3)
             } else {
@@ -206,7 +207,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     fn lorentz_field(&mut self, field: &V)
         where V: CrossVector<D>
     {
-        let acceleration = self.velocity().cross(field) * self.quanta() / self.inertia();
+        let acceleration = V::cross(&self.velocity(), field) * self.quanta() / self.inertia();
         self.accelerate(&acceleration);
     }
 }

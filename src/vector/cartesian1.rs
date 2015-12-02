@@ -81,8 +81,8 @@ impl<D> Neg for Cartesian1<D>
 impl<D> Vector<D> for Cartesian1<D>
     where D: Float
 {
-    fn dot(&self, rhs: &Self) -> D {
-        self.x * rhs.x
+    fn dot(&lhs: &Self, rhs: &Self) -> D {
+        lhs.x * rhs.x
     }
     fn displacement(&self) -> D {
         self.x

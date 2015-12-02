@@ -82,8 +82,8 @@ impl<D> Neg for Cartesian2<D>
 impl<D> Vector<D> for Cartesian2<D>
     where D: Float
 {
-    fn dot(&self, rhs: &Self) -> D {
-        self.x * rhs.x + self.y * rhs.y
+    fn dot(&lhs: &Self, rhs: &Self) -> D {
+        lhs.x * rhs.x + lhs.y * rhs.y
     }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()

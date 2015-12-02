@@ -83,8 +83,8 @@ impl<D> Neg for Cartesian3<D>
 impl<D> Vector<D> for Cartesian3<D>
     where D: Float
 {
-    fn dot(&self, rhs: &Self) -> D {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    fn dot(&lhs: &Self, rhs: &Self) -> D {
+        lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
     }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()
@@ -97,11 +97,11 @@ impl<D> Vector<D> for Cartesian3<D>
 impl <D> CrossVector<D> for Cartesian3<D>
     where D: Float
 {
-    fn cross(&self, rhs: &Self) -> Self {
+    fn cross(lhs: &Self, rhs: &Self) -> Self {
         Cartesian3{
-            x: self.y * rhs.z - self.z * rhs.y,
-            y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x,
+            x: lhs.y * rhs.z - lhs.z * rhs.y,
+            y: lhs.z * rhs.x - lhs.x * rhs.z,
+            z: lhs.x * rhs.y - lhs.y * rhs.x,
         }
     }
 }

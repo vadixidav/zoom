@@ -1,6 +1,6 @@
 [root]
 name = "zoom"
-version = "0.12.1"
+version = "0.13.0"
 dependencies = [
  "num 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

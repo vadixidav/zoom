@@ -14,7 +14,7 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
 {
-    fn dot(&self, rhs: &Self) -> D;
+    fn dot(&lhs: &Self, rhs: &Self) -> D;
     fn displacement(&self) -> D;
     fn displacement_squared(&self) -> D {
         self.displacement().powi(2)
@@ -31,5 +31,5 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
 pub trait CrossVector<D>: Vector<D>
     where D: Float
 {
-    fn cross(&self, rhs: &Self) -> Self;
+    fn cross(lhs: &Self, rhs: &Self) -> Self;
 }
