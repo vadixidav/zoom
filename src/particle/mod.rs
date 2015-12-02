@@ -38,7 +38,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply proper attraction between two physics particles based on their quanta and position
-    fn gravitate<T: ?Sized>(lhs: &mut Self, rhs: &mut T)
+    fn gravitate<T: ?Sized>(lhs: &mut Self, rhs: &mut T, magnitude: D)
         where T: PhysicsParticle<V, D>
     {
         //Create delta vector between the two positions
@@ -47,7 +47,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
         let distance = delta.displacement();
         //Dividing the delta vector by the distance cubed computes attractive force as per the inverse square law.
         //The extra degree normalizes the direction vector to a unit vector.
-        let force = delta / distance.powi(3) *
+        let force = delta * magnitude / distance.powi(3) *
         //Multiply by the two quanta of the objects to compute the final force.
         lhs.quanta() * rhs.quanta();
 
@@ -67,13 +67,13 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
     The radius is passed squared for internal efficiency reasons.
     */
-    fn gravitate_radius_squared<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius_squared: D)
+    fn gravitate_radius_squared<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius_squared: D, magnitude: D)
         where T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance_squared = delta.displacement_squared();
         //Force is the only thing that changes from normal gravitation
-        let force = delta * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
+        let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
             distance_squared.sqrt().powi(3)
         } else {
             radius_squared
@@ -86,10 +86,10 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
     //This function exists so that if an optimization is possible later, it can be specially implemented.
     //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
-    fn gravitate_radius<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius: D)
+    fn gravitate_radius<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius: D, magnitude: D)
         where T: PhysicsParticle<V, D>
     {
-        Self::gravitate_radius_squared(lhs, rhs, radius * radius);
+        Self::gravitate_radius_squared(lhs, rhs, radius * radius, magnitude);
     }
 
     //Apply proper attraction to a single physics particle towards a location and with a magnitude
@@ -102,7 +102,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Works the same as gravitate_radius_squared and gravitate_to
-    fn gravitate_radius_squared_to(&mut self, location: V, magnitude: D, radius_squared: D) {
+    fn gravitate_radius_squared_to(&mut self, location: V, radius_squared: D, magnitude: D) {
         //Create delta vector from the particle to the center of attraction
         let delta = location - self.position();
         let distance_squared = delta.displacement_squared();
@@ -119,16 +119,16 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
     //This function exists so that if an optimization is possible later, it can be specially implemented.
     //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
-    fn gravitate_radius_to(&mut self, location: V, magnitude: D, radius: D) {
-        self.gravitate_radius_squared_to(location, magnitude, radius * radius);
+    fn gravitate_radius_to(&mut self, location: V, radius: D, magnitude: D) {
+        self.gravitate_radius_squared_to(location, radius * radius, magnitude);
     }
 
     //Apply spring forces between two particles
-    fn hooke<T: ?Sized>(lhs: &mut Self, rhs: &mut T)
+    fn hooke<T: ?Sized>(lhs: &mut Self, rhs: &mut T, magnitude: D)
         where T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
-        let force = delta.normalized() * delta.displacement() * lhs.quanta() * rhs.quanta();
+        let force = delta.normalized() * magnitude * delta.displacement() * lhs.quanta() * rhs.quanta();
         let acceleration = force / lhs.inertia();
         lhs.accelerate(&acceleration);
         let acceleration = -force / rhs.inertia();
@@ -136,11 +136,11 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply spring forces between two particles with specified equilibrium distance
-    fn hooke_equilibrium<T: ?Sized>(lhs: &mut Self, rhs: &mut T, equilibrium: D)
+    fn hooke_equilibrium<T: ?Sized>(lhs: &mut Self, rhs: &mut T, equilibrium: D, magnitude: D)
         where T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
-        let force = delta.normalized() *
+        let force = delta.normalized() * magnitude *
             //We scale such that if displacement is greater than equilibrium, the particles attract proportionally
             //Particles with a displacement smaller than equilibrium repel each other
             (delta.displacement() - equilibrium) *
@@ -160,7 +160,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply spring forces between one particle and a position with an equilibrium and magnitude
-    fn hooke_equilibrium_to(&mut self, location: V, magnitude: D, equilibrium: D) {
+    fn hooke_equilibrium_to(&mut self, location: V, equilibrium: D, magnitude: D) {
         let delta = location - self.position();
         let acceleration = delta.normalized() * (delta.displacement() - equilibrium) *
             magnitude * self.quanta() / self.inertia();
@@ -168,13 +168,13 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity
-    fn lorentz<T: ?Sized>(lhs: &mut Self, rhs: &mut T)
+    fn lorentz<T: ?Sized>(lhs: &mut Self, rhs: &mut T, magnitude: D)
         where V: CrossVector<D>, T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance = delta.displacement();
         let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) *
-            lhs.quanta() * rhs.quanta() / distance.powi(3);
+            lhs.quanta() * rhs.quanta() / distance.powi(3) * magnitude;
 
         let acceleration = -force / lhs.inertia();
         lhs.accelerate(&acceleration);
@@ -183,12 +183,13 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     }
 
     //Apply lorentz forces between two PhysicsParticle objects with a radius_squared
-    fn lorentz_radius_squared<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius_squared: D)
+    fn lorentz_radius_squared<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius_squared: D, magnitude: D)
         where V: CrossVector<D>, T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance_squared = delta.displacement_squared();
-        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * lhs.quanta() * rhs.quanta() /
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * rhs.quanta() /
             if distance_squared > radius_squared {
                 distance_squared.sqrt().powi(3)
             } else {
@@ -203,10 +204,10 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
 
     //This function exists so that if an optimization is possible later, it can be specially implemented.
     //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
-    fn lorentz_radius<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius: D)
+    fn lorentz_radius<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius: D, magnitude: D)
         where V: CrossVector<D>, T: PhysicsParticle<V, D>
     {
-        Self::lorentz_radius_squared(lhs, rhs, radius * radius);
+        Self::lorentz_radius_squared(lhs, rhs, radius * radius, magnitude);
     }
 
     //Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field
