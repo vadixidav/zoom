@@ -31,6 +31,12 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
     //A function that must be implemented by a PhysicsParticle; it reveals the resistance to change in motion
     fn inertia(&self) -> D;
 
+    //Apply drag forces to a particle
+    fn drag(&mut self, magnitude: D) {
+        let acceleration = -self.velocity() * magnitude / self.inertia();
+        self.accelerate(&acceleration);
+    }
+
     //Apply proper attraction between two physics particles based on their quanta and position
     fn gravitate<T: ?Sized>(lhs: &mut Self, rhs: &mut T)
         where T: PhysicsParticle<V, D>
