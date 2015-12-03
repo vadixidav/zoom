@@ -35,6 +35,14 @@ impl<V, D> Quanta<D> for BasicParticle<V, D>
     }
 }
 
+impl<V, D> Inertia<D> for BasicParticle<V, D>
+    where V: Vector<D>, D: Float
+{
+    fn inertia(&self) -> D {
+        self.inertia
+    }
+}
+
 impl<V, D> Particle<V, D> for BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
@@ -60,7 +68,4 @@ impl<V, D> Particle<V, D> for BasicParticle<V, D>
 impl<V, D> PhysicsParticle<V, D> for BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
-    fn inertia(&self) -> D {
-        self.inertia
-    }
 }

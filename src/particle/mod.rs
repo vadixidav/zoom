@@ -5,6 +5,7 @@ extern crate num;
 use self::num::Float;
 use super::vector::*;
 
+//An object that has quanta
 pub trait Quanta<D>
     where D: Float
 {
@@ -12,6 +13,15 @@ pub trait Quanta<D>
     fn quanta(&self) -> D;
 }
 
+//An object that has inertia
+pub trait Inertia<D>
+    where D: Float
+{
+    //Retrieve the inertia of a physics particle
+    fn inertia(&self) -> D;
+}
+
+//An object that has a simple particle motion interface
 pub trait Particle<V, D>
     where V: Vector<D>, D: Float
 {
@@ -25,12 +35,9 @@ pub trait Particle<V, D>
     fn advance(&mut self);
 }
 
-pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D>
+pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     where V: Vector<D>, D: Float
 {
-    //A function that must be implemented by a PhysicsParticle; it reveals the resistance to change in motion
-    fn inertia(&self) -> D;
-
     //Apply drag forces to a particle
     fn drag(&mut self, magnitude: D) {
         let acceleration = -self.velocity() * magnitude / self.inertia();
