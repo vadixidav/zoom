@@ -58,9 +58,9 @@ impl<V, D> Particle<V, D> for BasicParticle<V, D>
         self.acceleration = self.acceleration + *vec;
     }
 
-    fn advance(&mut self) {
-        self.velocity = self.velocity + self.acceleration;
-        self.position = self.position + self.velocity;
+    fn advance(&mut self, time: D) {
+        self.velocity = self.velocity + self.acceleration * time;
+        self.position = self.position + self.velocity * time;
         self.acceleration = V::zero();
     }
 }

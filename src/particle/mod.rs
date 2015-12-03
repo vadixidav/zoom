@@ -32,7 +32,7 @@ pub trait Particle<V, D>
     //Accelerate particle
     fn accelerate(&mut self, vec: &V);
     //Advance particle (update position and velocity)
-    fn advance(&mut self);
+    fn advance(&mut self, time: D);
 }
 
 pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
