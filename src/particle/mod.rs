@@ -38,6 +38,11 @@ pub trait Particle<V, D>
 pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     where V: Vector<D>, D: Float
 {
+    //Convert a PhysicsParticle into a "basic particle" that implements PhysicsParticle but has the minimum members
+    fn basic_form(&self) -> BasicParticle<V, D> {
+        BasicParticle::new(self.quanta(), self.position(), self.velocity(), self.inertia())
+    }
+
     //Apply drag forces to a particle
     fn drag(&mut self, magnitude: D) {
         let acceleration = -self.velocity() * magnitude / self.inertia();
