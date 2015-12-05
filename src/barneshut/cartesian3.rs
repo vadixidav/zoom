@@ -9,9 +9,9 @@ struct Node<P, V, D>
 {
     origin: V,
     offset: V,
-    branches:
+    branches: [Child<>; 8],
 }
 
 struct Tree {
-    
+
 }
