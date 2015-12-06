@@ -14,14 +14,23 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
 {
+    //Returns the result of the cos of the angle between two vectors multiplied by their magnitudes
     fn dot(&lhs: &Self, rhs: &Self) -> D;
+
+    //Returns the length of a vector
     fn displacement(&self) -> D;
+
+    //Returns the squared length of a vector; this is more efficient than displacement() for cartesian vectors
     fn displacement_squared(&self) -> D {
         self.displacement().powi(2)
     }
+
+    //Return a vector in the same direction as this one, but with length 1
     fn normalized(&self) -> Self {
         *self / self.displacement()
     }
+
+    //Make this vector normalized()
     fn normalize(&mut self) {
         *self = self.normalized();
     }
