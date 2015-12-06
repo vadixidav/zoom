@@ -21,12 +21,18 @@ pub trait Inertia<D>
     fn inertia(&self) -> D;
 }
 
-//An object that has a simple particle motion interface
-pub trait Particle<V, D>
+//An opject with a location
+pub trait Position<V, D>
     where V: Vector<D>, D: Float
 {
     //Get position of particle
     fn position(&self) -> V;
+}
+
+//An object that has a simple particle motion interface
+pub trait Particle<V, D>: Position<V, D>
+    where V: Vector<D>, D: Float
+{
     //Get velocity of particle
     fn velocity(&self) -> V;
     //Accelerate particle
