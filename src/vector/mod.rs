@@ -42,3 +42,30 @@ pub trait CrossVector<D>: Vector<D>
 {
     fn cross(lhs: &Self, rhs: &Self) -> Self;
 }
+
+pub struct Box<V, D>
+    where V: Vector<D>, D: Float
+{
+    pub origin: V,
+    pub offset: V,
+}
+
+impl<V, D> Box<V, D>
+    where V: Vector<D>, D: Float
+{
+    fn new(origin: V, offset: V) -> Self {
+        Box{
+            origin: origin,
+            offset: offset,
+        }
+    }
+}
+
+impl<V, D> Clone for Box<V, D> {
+    fn clone(&self) -> Self {
+        Box{
+            origin: self.origin,
+            offset: self.offset,
+        }
+    }
+}
