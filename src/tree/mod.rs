@@ -5,6 +5,12 @@ use self::num::Float;
 use super::vector::Vector;
 use super::particle::Position;
 
+enum Child<O, N> {
+    None,
+    Leaf(Box<O>),
+    Node(Box<N>),
+}
+
 /*
 SpatialTree implementors store objects with positions such that they can be efficiently retrieved based on spatial
 locality and position.
