@@ -17,6 +17,9 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
     //Returns the result of the cos of the angle between two vectors multiplied by their magnitudes
     fn dot(&lhs: &Self, rhs: &Self) -> D;
 
+    //Returns the space contained by the vector relative to the origin
+    fn space(&self) -> D;
+
     //Returns the length of a vector
     fn displacement(&self) -> D;
 
@@ -43,29 +46,34 @@ pub trait CrossVector<D>: Vector<D>
     fn cross(lhs: &Self, rhs: &Self) -> Self;
 }
 
-pub struct Box<V, D>
-    where V: Vector<D>, D: Float
-{
+pub struct Box<V> {
     pub origin: V,
     pub offset: V,
 }
 
-impl<V, D> Box<V, D>
-    where V: Vector<D>, D: Float
-{
-    fn new(origin: V, offset: V) -> Self {
+impl<V> Box<V> {
+    pub fn new(origin: V, offset: V) -> Self {
         Box{
             origin: origin,
             offset: offset,
         }
     }
+
+    //Compute the amount of space contained in the box
+    pub fn space<D>(&self) -> D
+        where V: Vector<D>, D: Float
+    {
+        self.offset.space()
+    }
 }
 
-impl<V, D> Clone for Box<V, D> {
+impl<V> Clone for Box<V>
+    where V: Clone
+{
     fn clone(&self) -> Self {
         Box{
-            origin: self.origin,
-            offset: self.offset,
+            origin: self.origin.clone(),
+            offset: self.offset.clone(),
         }
     }
 }

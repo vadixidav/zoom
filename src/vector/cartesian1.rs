@@ -84,6 +84,9 @@ impl<D> Vector<D> for Cartesian1<D>
     fn dot(&lhs: &Self, rhs: &Self) -> D {
         lhs.x * rhs.x
     }
+    fn space(&self) -> D {
+        self.x
+    }
     fn displacement(&self) -> D {
         self.x
     }

@@ -85,6 +85,9 @@ impl<D> Vector<D> for Cartesian2<D>
     fn dot(&lhs: &Self, rhs: &Self) -> D {
         lhs.x * rhs.x + lhs.y * rhs.y
     }
+    fn space(&self) -> D {
+        self.x * self.y
+    }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()
     }

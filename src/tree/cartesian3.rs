@@ -1,37 +1,35 @@
 extern crate num;
+
 use self::num::Float;
 use super::super::vector;
 use super::super::vector::{Vector, Cartesian3};
 use super::super::particle::Position;
 use super::Child;
 
-struct Node<O, V, D>
-    where V: Vector<D>, D: Float
-{
-    branches: [Child<O, Node<O, V, D>>; 8],
-    location: vector::Box<V, D>,
+struct Node<O, V> {
+    //The volume of the tree
+    location: vector::Box<V>,
+    //Each of the octants in the octree
+    branches: [Child<O, Node<O, V>>; 8],
 }
 
-pub struct Tree<O, V, D>
-    where V: Vector<D>, D: Float
-{
-    offset: V,
-    root: Child<O, Node<O, V, D>>,
+pub struct Tree<O, V> {
+    //The root node of the tree which encompases some space specified in the node
+    root: Child<O, Node<O, V>>,
 }
 
-struct IterInfo<'a, O, V, D>
-    where O: 'a, V: 'a + Vector<D>, D: 'a + Float
+struct IterInfo<'a, O, V>
+    where O: 'a, V: 'a
 {
     //The node of this part of the iteration
-    node: &'a Node<O, V, D>,
+    node: &'a Node<O, V>,
+    //Count across each 8 octants
     branch: usize,
-    //This is the offset of the present Node
-    offset: V,
 }
 
-pub struct Iter<'a, O, V, D>
-    where O: 'a + Position<V, D>, V: 'a + Vector<D>, D: 'a + Float
+pub struct Iter<'a, O, V>
+    where O: 'a, V: 'a
 {
-    tree: &'a mut Tree<O, V, D>,
-    stack: Vec<IterInfo<'a, O, V, D>>,
+    //The stack of where we are iterating, once this is empty we return None
+    stack: Vec<IterInfo<'a, O, V>>,
 }
