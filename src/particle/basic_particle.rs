@@ -43,7 +43,7 @@ impl<V, D> Inertia<D> for BasicParticle<V, D>
     }
 }
 
-impl<V, D> Position<V, D> for BasicParticle<V, D>
+impl<V, D> Position<V> for BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
     fn position(&self) -> V {

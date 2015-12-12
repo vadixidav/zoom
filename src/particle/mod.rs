@@ -6,33 +6,25 @@ use self::num::Float;
 use super::vector::*;
 
 //An object that has quanta
-pub trait Quanta<D>
-    where D: Float
-{
+pub trait Quanta<D> {
     //Retrieve the quanta of a physics particle
     fn quanta(&self) -> D;
 }
 
 //An object that has inertia
-pub trait Inertia<D>
-    where D: Float
-{
+pub trait Inertia<D> {
     //Retrieve the inertia of a physics particle
     fn inertia(&self) -> D;
 }
 
 //An opject with a location
-pub trait Position<V, D>
-    where V: Vector<D>, D: Float
-{
+pub trait Position<V> {
     //Get position of particle
     fn position(&self) -> V;
 }
 
 //An object that has a simple particle motion interface
-pub trait Particle<V, D>: Position<V, D>
-    where V: Vector<D>, D: Float
-{
+pub trait Particle<V, D>: Position<V> + Inertia<D> + Quanta<D> {
     //Get velocity of particle
     fn velocity(&self) -> V;
     //Accelerate particle
@@ -187,7 +179,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
 
     //Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity
     fn lorentz<T: ?Sized>(lhs: &mut Self, rhs: &mut T, magnitude: D)
-        where V: CrossVector<D>, T: PhysicsParticle<V, D>
+        where V: CrossVector, T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance = delta.displacement();
@@ -202,7 +194,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
 
     //Apply lorentz forces between two PhysicsParticle objects with a radius_squared
     fn lorentz_radius_squared<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius_squared: D, magnitude: D)
-        where V: CrossVector<D>, T: PhysicsParticle<V, D>
+        where V: CrossVector, T: PhysicsParticle<V, D>
     {
         let delta = rhs.position() - lhs.position();
         let distance_squared = delta.displacement_squared();
@@ -223,14 +215,14 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     //This function exists so that if an optimization is possible later, it can be specially implemented.
     //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
     fn lorentz_radius<T: ?Sized>(lhs: &mut Self, rhs: &mut T, radius: D, magnitude: D)
-        where V: CrossVector<D>, T: PhysicsParticle<V, D>
+        where V: CrossVector, T: PhysicsParticle<V, D>
     {
         Self::lorentz_radius_squared(lhs, rhs, radius * radius, magnitude);
     }
 
     //Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field
     fn lorentz_field(&mut self, field: &V)
-        where V: CrossVector<D>
+        where V: CrossVector
     {
         let acceleration = V::cross(&self.velocity(), field) * self.quanta() / self.inertia();
         self.accelerate(&acceleration);

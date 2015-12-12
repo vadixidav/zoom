@@ -1,8 +1,6 @@
 pub mod cartesian3;
 
 extern crate num;
-use self::num::Float;
-use super::vector::Vector;
 use super::particle::Position;
 
 enum Child<O, N> {
@@ -16,7 +14,7 @@ SpatialTree implementors store objects with positions such that they can be effi
 locality and position.
 */
 trait SpatialTree<'a, O, V, D>: 'a
-    where O: 'a + Position<V, D>, V: Vector<D>, D: Float
+    where O: 'a + Position<V>
 {
     type Iter: Iterator<Item=&'a mut O>;
     type RadiusIter: Iterator<Item=&'a mut O>;

@@ -40,9 +40,7 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
 }
 
 //CrossVector is a Vector that has dimensions such that the cross product can be computed
-pub trait CrossVector<D>: Vector<D>
-    where D: Float
-{
+pub trait CrossVector {
     fn cross(lhs: &Self, rhs: &Self) -> Self;
 }
 
