@@ -4,7 +4,7 @@ use self::num::Float;
 use super::super::vector;
 use super::super::vector::{Vector, Cartesian3};
 use super::super::particle::Position;
-use super::Child;
+use super::{Child, SpatialTree};
 
 struct Node<O, V> {
     //The volume of the tree
@@ -33,3 +33,7 @@ pub struct Iter<'a, O, V>
     //The stack of where we are iterating, once this is empty we return None
     stack: Vec<IterInfo<'a, O, V>>,
 }
+/*
+impl<'a, O, V, D> SpatialTree<'a, O, V, D> for Tree<O, V> {
+
+}*/
