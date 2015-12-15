@@ -1,7 +1,8 @@
 extern crate num;
 use super::{Vector, CrossVector};
-use self::num::{Float, Zero};
+use self::num::{Float, Zero, FromPrimitive};
 use std::ops::{Add, Sub, Neg, Mul, Div};
+use std::f64::consts::PI;
 
 pub struct Cartesian3<D> {
     pub x: D,
@@ -81,13 +82,16 @@ impl<D> Neg for Cartesian3<D>
 }
 
 impl<D> Vector<D> for Cartesian3<D>
-    where D: Float
+    where D: Float + FromPrimitive
 {
+    fn space_nsphere(d: D) -> D {
+        d * d * d * D::from_f64(4.0 / 3.0 * PI).unwrap()
+    }
     fn dot(&lhs: &Self, rhs: &Self) -> D {
         lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
     }
-    fn space(&self) -> D {
-        self.x * self.y
+    fn space_box(&self) -> D {
+        self.x * self.y * self.z
     }
     fn displacement(&self) -> D {
         self.displacement_squared().sqrt()

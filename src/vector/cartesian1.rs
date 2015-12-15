@@ -1,6 +1,6 @@
 extern crate num;
 use super::Vector;
-use self::num::{Float, Zero};
+use self::num::{Float, Zero, FromPrimitive};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
 pub struct Cartesian1<D> {
@@ -79,12 +79,15 @@ impl<D> Neg for Cartesian1<D>
 }
 
 impl<D> Vector<D> for Cartesian1<D>
-    where D: Float
+    where D: Float + FromPrimitive
 {
+    fn space_nsphere(d: D) -> D {
+        D::from_u32(2u32).unwrap() * d
+    }
     fn dot(&lhs: &Self, rhs: &Self) -> D {
         lhs.x * rhs.x
     }
-    fn space(&self) -> D {
+    fn space_box(&self) -> D {
         self.x
     }
     fn displacement(&self) -> D {
