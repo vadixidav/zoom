@@ -14,8 +14,14 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
 {
+    //Returns the space contained by an n-sphere with edge displacement d in the dimensional system of this vector
+    fn space_nsphere(d: D) -> D;
+
     //Returns the result of the cos of the angle between two vectors multiplied by their magnitudes
     fn dot(&lhs: &Self, rhs: &Self) -> D;
+
+    //Returns the space contained by the vector relative to the origin forming a box
+    fn space_box(&self) -> D;
 
     //Returns the length of a vector
     fn displacement(&self) -> D;
@@ -37,8 +43,59 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
 }
 
 //CrossVector is a Vector that has dimensions such that the cross product can be computed
-pub trait CrossVector<D>: Vector<D>
-    where D: Float
-{
+pub trait CrossVector {
     fn cross(lhs: &Self, rhs: &Self) -> Self;
+}
+
+pub struct Box<V> {
+    pub origin: V,
+    pub offset: V,
+}
+
+impl<V> Box<V> {
+    pub fn new(origin: V, offset: V) -> Self {
+        Box{
+            origin: origin,
+            offset: offset,
+        }
+    }
+
+    //Compute the amount of space contained in the box
+    pub fn space<D>(&self) -> D
+        where V: Vector<D>, D: Float
+    {
+        self.offset.space_box()
+    }
+}
+
+impl<V> Clone for Box<V>
+    where V: Clone
+{
+    fn clone(&self) -> Self {
+        Box{
+            origin: self.origin.clone(),
+            offset: self.offset.clone(),
+        }
+    }
+}
+
+pub struct NSphere<V, D> {
+    pub origin: V,
+    pub radius: D,
+}
+
+impl<V, D> NSphere<V, D> {
+    pub fn new(origin: V, radius: D) -> Self {
+        NSphere{
+            origin: origin,
+            radius: radius,
+        }
+    }
+
+    //Compute the amount of space contained in the box
+    pub fn space(&self) -> D
+        where V: Vector<D>, D: Float
+    {
+        V::space_nsphere(self.radius)
+    }
 }
