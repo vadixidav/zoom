@@ -3,6 +3,7 @@ extern crate num;
 use self::num::Float;
 use super::super::{Vector, Cartesian3, Position, Box};
 use super::{Child, SpatialTree};
+use std::ops::{DerefMut, Deref};
 
 struct Node<O, V> {
     //The volume of the tree
@@ -35,7 +36,25 @@ pub struct Iter<'a, O, V>
 impl<'a, O, V> Iterator for Iter<'a, O, V> {
     type Item = &'a mut O;
     fn next(&mut self) -> Option<&'a mut O> {
-        None
+        let result = self.stack.pop();
+        match result {
+            Some(info) => {
+                if info.branch == 7 {
+                    self.next()
+                } else {
+                    match info.node.branches[info.branch] {
+                        Child::Leaf(ref mut l) => Some(l.deref_mut()),
+                        Child::Node(ref n) => {
+                            self.stack.push(IterInfo{node: n.deref(), branch: 0});
+                            self.next()
+                        },
+                        Child::None => None,
+                    }
+                }
+            },
+            //Continue to return None so long as the iterator is empty
+            None => None,
+        }
     }
 }
 
@@ -50,22 +69,6 @@ impl<'a, O, V, D> SpatialTree<'a, O, V, D> for Tree<O, V>
 
     fn iter(&'a mut self) -> Self::Iter {
         Iter{stack: vec![IterInfo{node: &mut self.root, branch: 0}]}
-    }
-
-    fn iter_radius(&'a mut self, center: V, radius: D) -> Self::RadiusIter {
-        self.iter_radius_squared(center, radius * radius)
-    }
-
-    fn iter_radius_squared(&'a mut self, center: V, radius_squared: D) -> Self::RadiusSquaredIter {
-        Iter{stack: Vec::new()}
-    }
-
-    fn iter_cube_center(&'a mut self, center: V, half_side: D) -> Self::CubeIter {
-        Iter{stack: Vec::new()}
-    }
-
-    fn iter_cube_corner(&'a mut self, corner: V, side: D) -> Self::CornerIter {
-        Iter{stack: Vec::new()}
     }
 
     fn insert(&mut self, obj: O) {
