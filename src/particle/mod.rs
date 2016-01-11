@@ -23,6 +23,12 @@ pub trait Position<V> {
     fn position(&self) -> V;
 }
 
+//An object with a velocity
+pub trait Velocity<V> {
+    //Get velocity of particle
+    fn velocity(&self) -> V;
+}
+
 //A uniform sphere with a radius
 pub trait UniformBall<D> {
     //Get radius of particle
@@ -36,9 +42,7 @@ pub trait UniformBall<D> {
 }
 
 //An object that has a simple particle motion interface
-pub trait Particle<V, D>: Position<V> + Inertia<D> {
-    //Get velocity of particle
-    fn velocity(&self) -> V;
+pub trait Particle<V, D>: Position<V> + Velocity<V> + Inertia<D> {
     //Accelerate particle
     fn accelerate(&mut self, vec: &V);
     //Advance particle (update position and velocity)
@@ -172,19 +176,23 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         rhs.accelerate(&acceleration);
     }
 
-    //Apply spring forces between one particle and a position with a magnitude
-    fn hooke_to(&mut self, location: V, magnitude: D) {
-        let delta = location - self.position();
+    //Apply spring forces between one particle and a virtual particle that is unaffected
+    fn hooke_to<T: ?Sized>(&mut self, center: &T, magnitude: D)
+        where T: Quanta<D> + Position<V>
+    {
+        let delta = center.position() - self.position();
         let acceleration = delta.normalized() * delta.displacement() *
-            magnitude * self.quanta() / self.inertia();
+            magnitude * self.quanta() * center.quanta() / self.inertia();
         self.accelerate(&acceleration);
     }
 
-    //Apply spring forces between one particle and a position with an equilibrium and magnitude
-    fn hooke_equilibrium_to(&mut self, location: V, equilibrium: D, magnitude: D) {
-        let delta = location - self.position();
+    //Apply spring forces between one particle and a virtual particle that is unaffected
+    fn hooke_equilibrium_to<T: ?Sized>(&mut self, center: &T, equilibrium: D, magnitude: D)
+        where T: Quanta<D> + Position<V>
+    {
+        let delta = center.position() - self.position();
         let acceleration = delta.normalized() * (delta.displacement() - equilibrium) *
-            magnitude * self.quanta() / self.inertia();
+            magnitude * self.quanta() * center.quanta() / self.inertia();
         self.accelerate(&acceleration);
     }
 
@@ -237,5 +245,23 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     {
         let acceleration = V::cross(&self.velocity(), field) * self.quanta() / self.inertia();
         self.accelerate(&acceleration);
+    }
+
+    //Apply the lorentz force on a virtual particle that is unaffected
+    fn lorentz_to<T: ?Sized>(lhs: &mut Self, center: &T, magnitude: D)
+        where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V> + UniformBall<D>
+    {
+        let delta = center.position() - lhs.position();
+        let distance_squared = delta.displacement_squared();
+        let force = V::cross(&center.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * center.quanta() /
+            if distance_squared > center.radius_squared() {
+                distance_squared.sqrt().powi(3)
+            } else {
+                center.radius_squared()
+            };
+
+        let acceleration = -force / lhs.inertia();
+        lhs.accelerate(&acceleration);
     }
 }

@@ -51,13 +51,17 @@ impl<V, D> Position<V> for BasicParticle<V, D>
     }
 }
 
-impl<V, D> Particle<V, D> for BasicParticle<V, D>
+impl <V, D> Velocity<V> for BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
     fn velocity(&self) -> V {
         self.velocity
     }
+}
 
+impl<V, D> Particle<V, D> for BasicParticle<V, D>
+    where V: Vector<D>, D: Float
+{
     fn accelerate(&mut self, vec: &V) {
         self.acceleration = self.acceleration + *vec;
     }
