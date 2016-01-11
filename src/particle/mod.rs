@@ -24,7 +24,7 @@ pub trait Position<V> {
 }
 
 //An object that has a simple particle motion interface
-pub trait Particle<V, D>: Position<V> + Inertia<D> + Quanta<D> {
+pub trait Particle<V, D>: Position<V> + Inertia<D> {
     //Get velocity of particle
     fn velocity(&self) -> V;
     //Accelerate particle
