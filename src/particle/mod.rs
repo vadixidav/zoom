@@ -249,6 +249,19 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
 
     //Apply the lorentz force on a virtual particle that is unaffected
     fn lorentz_to<T: ?Sized>(lhs: &mut Self, center: &T, magnitude: D)
+        where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V>
+    {
+        let delta = center.position() - lhs.position();
+        let distance_squared = delta.displacement_squared();
+        let force = V::cross(&center.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * center.quanta() / distance_squared.sqrt().powi(3);
+
+        let acceleration = -force / lhs.inertia();
+        lhs.accelerate(&acceleration);
+    }
+
+    //Apply the lorentz force on a virtual particle that is unaffected
+    fn lorentz_radius_to<T: ?Sized>(lhs: &mut Self, center: &T, magnitude: D)
         where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V> + UniformBall<D>
     {
         let delta = center.position() - lhs.position();
