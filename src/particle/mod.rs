@@ -17,10 +17,22 @@ pub trait Inertia<D> {
     fn inertia(&self) -> D;
 }
 
-//An opject with a location
+//An object with a location
 pub trait Position<V> {
     //Get position of particle
     fn position(&self) -> V;
+}
+
+//A uniform sphere with a radius
+pub trait UniformBall<D> {
+    //Get radius of particle
+    fn radius(&self) -> D;
+    //Get radius squared of particle (override this when more efficient)
+    fn radius_squared(&self) -> D
+        where D: Float
+    {
+        self.radius().powi(2)
+    }
 }
 
 //An object that has a simple particle motion interface
@@ -103,34 +115,33 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //Apply proper attraction to a single physics particle towards a location and with a magnitude
-    fn gravitate_to(&mut self, location: V, magnitude: D) {
+    fn gravitate_to<T: ?Sized>(&mut self, center: &T, magnitude: D)
+        where T: Quanta<D> + Position<V>
+    {
         //Create delta vector from the particle to the center of attraction
-        let delta = location - self.position();
+        let delta = center.position() - self.position();
         let distance = delta.displacement();
-        let acceleration = delta / distance.powi(3) * magnitude * self.quanta() / self.inertia();
+        let acceleration = delta / distance.powi(3) * magnitude *
+            self.quanta() * center.quanta() / self.inertia();
         self.accelerate(&acceleration);
     }
 
     //Works the same as gravitate_radius_squared and gravitate_to
-    fn gravitate_radius_squared_to(&mut self, location: V, radius_squared: D, magnitude: D) {
+    fn gravitate_radius_to<T: ?Sized>(&mut self, center: &T, magnitude: D)
+        where T: Quanta<D> + Position<V> + UniformBall<D>
+    {
         //Create delta vector from the particle to the center of attraction
-        let delta = location - self.position();
+        let delta = center.position() - self.position();
         let distance_squared = delta.displacement_squared();
-        let acceleration = delta * magnitude * self.quanta() / (
+        let acceleration = delta * magnitude * self.quanta() * center.quanta() / (
                 self.inertia() *
-                if distance_squared > radius_squared {
+                if distance_squared > center.radius_squared() {
                     distance_squared.sqrt().powi(3)
                 } else {
-                    radius_squared
+                    center.radius_squared()
                 }
             );
         self.accelerate(&acceleration);
-    }
-
-    //This function exists so that if an optimization is possible later, it can be specially implemented.
-    //Presently it just acts as a frontend to its squared counterpart. Prefer squared version if possible.
-    fn gravitate_radius_to(&mut self, location: V, radius: D, magnitude: D) {
-        self.gravitate_radius_squared_to(location, radius * radius, magnitude);
     }
 
     //Apply spring forces between two particles
