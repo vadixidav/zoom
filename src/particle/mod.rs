@@ -48,13 +48,13 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //Apply drag forces to a particle.
-    fn drag(&mut self, magnitude: D) {
+    fn drag(&self, magnitude: D) {
         let force = -self.velocity() * magnitude;
         self.impulse(&force);
     }
 
     //Apply proper attraction to a single physics particle towards a location and with a magnitude.
-    fn gravitate_to<T: ?Sized>(&mut self, center: &T, magnitude: D)
+    fn gravitate_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where T: Quanta<D> + Position<V>
     {
         //Create delta vector from the particle to the center of attraction.
@@ -65,7 +65,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //This works the same as gravitate_radius_squared and gravitate_to.
-    fn gravitate_radius_to<T: ?Sized>(&mut self, center: &T, magnitude: D)
+    fn gravitate_radius_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where T: Quanta<D> + Position<V> + Ball<D>
     {
         //Create delta vector from the particle to the center of attraction.
@@ -81,7 +81,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //Apply spring forces between one particle and a virtual particle that is unaffected.
-    fn hooke_to<T: ?Sized>(&mut self, center: &T, magnitude: D)
+    fn hooke_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where T: Quanta<D> + Position<V>
     {
         let delta = center.position() - self.position();
@@ -91,7 +91,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //Apply spring forces between one particle and a virtual particle that is unaffected.
-    fn hooke_equilibrium_to<T: ?Sized>(&mut self, center: &T, equilibrium: D, magnitude: D)
+    fn hooke_equilibrium_to<T: ?Sized>(&self, center: &T, equilibrium: D, magnitude: D)
         where T: Quanta<D> + Position<V>
     {
         let delta = center.position() - self.position();
@@ -101,7 +101,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field.
-    fn lorentz_field(&mut self, field: &V)
+    fn lorentz_field(&self, field: &V)
         where V: CrossVector
     {
         let force = V::cross(&self.velocity(), field) * self.quanta() / self.inertia();
@@ -109,37 +109,37 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 
     //Apply the lorentz force on a virtual particle that is unaffected.
-    fn lorentz_to<T: ?Sized>(lhs: &mut Self, center: &T, magnitude: D)
+    fn lorentz_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V>
     {
-        let delta = center.position() - lhs.position();
+        let delta = center.position() - self.position();
         let distance_squared = delta.displacement_squared();
-        let force = V::cross(&V::cross(&lhs.velocity(), &delta), &center.velocity()) * magnitude *
-            lhs.quanta() * center.quanta() / distance_squared.sqrt().powi(3);
+        let force = V::cross(&V::cross(&self.velocity(), &delta), &center.velocity()) * magnitude *
+            self.quanta() * center.quanta() / distance_squared.sqrt().powi(3);
 
-        lhs.impulse(&force);
+        self.impulse(&force);
     }
 
     //Apply the lorentz force on a virtual particle that is unaffected.
-    fn lorentz_radius_to<T: ?Sized>(lhs: &mut Self, center: &T, magnitude: D)
+    fn lorentz_radius_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V> + Ball<D>
     {
-        let delta = center.position() - lhs.position();
+        let delta = center.position() - self.position();
         let distance_squared = delta.displacement_squared();
-        let force = V::cross(&V::cross(&lhs.velocity(), &delta), &center.velocity()) * magnitude *
-            lhs.quanta() * center.quanta() /
+        let force = V::cross(&V::cross(&self.velocity(), &delta), &center.velocity()) * magnitude *
+            self.quanta() * center.quanta() /
             if distance_squared > center.radius().powi(2) {
                 distance_squared.sqrt().powi(3)
             } else {
                 center.radius().powi(2)
             };
 
-        lhs.impulse(&force);
+        self.impulse(&force);
     }
 }
 
 //Apply proper attraction between two physics particles based on their quanta and position.
-pub fn gravitate<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitude: D)
+pub fn gravitate<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     //Create delta vector between the two positions.
@@ -164,7 +164,7 @@ particles are point particles. If the distance is less than the radius, then the
 gravitational quanta (mass) is evenly distributed and gravitational flux is used instead, which causes the
 interaction to become proportional to the radius, meaning that as the radius approaches zero, so does the force.
 */
-pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitude: D)
+pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D> + Ball<D>, T2: PhysicsParticle<V, D> + Ball<D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
@@ -181,7 +181,7 @@ pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2
 }
 
 //This is the same as the radius function, but the sum of the radii squared is passed separately to avoid overhead.
-pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, radius_squared: D, magnitude: D)
+pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
@@ -197,7 +197,7 @@ pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs:
 }
 
 //Apply spring forces between two particles.
-pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitude: D)
+pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
@@ -207,7 +207,7 @@ pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitude
 }
 
 //Apply spring forces between two particles with specified equilibrium distance.
-pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, equilibrium: D, magnitude: D)
+pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, equilibrium: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
@@ -221,7 +221,7 @@ pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T
 }
 
 //Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity.
-pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitude: D)
+pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float
 {
     let delta = rhs.position() - lhs.position();
@@ -234,7 +234,7 @@ pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitu
 }
 
 //Apply lorentz forces between two PhysicsParticle + Ball objects assuming uniformly distributed quanta.
-pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, magnitude: D)
+pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D> + Ball<D>, T2: PhysicsParticle<V, D> + Ball<D>, V: Vector<D> + CrossVector, D: Float
 {
     let delta = rhs.position() - lhs.position();
@@ -253,7 +253,7 @@ pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, 
 }
 
 //Apply lorentz forces between two PhysicsParticle objects using a precomputed net radius.
-pub fn lorentz_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &mut T1, rhs: &mut T2, radius_squared: D, magnitude: D)
+pub fn lorentz_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float
 {
     let delta = rhs.position() - lhs.position();
