@@ -3,13 +3,15 @@ use self::num::Float;
 use super::*;
 use super::super::Vector;
 
+use std::cell::UnsafeCell;
+
 pub struct BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
     quanta: D,
     position: V,
     velocity: V,
-    acceleration: V,
+    force: UnsafeCell<V>,
     inertia: D,
 }
 
@@ -21,7 +23,7 @@ impl<V, D> BasicParticle<V, D>
             quanta: quanta,
             position: position,
             velocity: velocity,
-            acceleration: V::zero(),
+            force: UnsafeCell::new(V::zero()),
             inertia: inertia,
         }
     }
@@ -62,14 +64,17 @@ impl <V, D> Velocity<V> for BasicParticle<V, D>
 impl<V, D> Particle<V, D> for BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
-    fn accelerate(&mut self, vec: &V) {
-        self.acceleration = self.acceleration + *vec;
+    fn impulse(&self, vec: &V) {
+        unsafe {
+            *self.force.get() = *self.force.get() + *vec;
+        }
     }
 
     fn advance(&mut self, time: D) {
-        self.velocity = self.velocity + self.acceleration * time;
+        let force = unsafe {&mut *self.force.get()};
+        self.velocity = self.velocity + *force / self.inertia() * time;
         self.position = self.position + self.velocity * time;
-        self.acceleration = V::zero();
+        *force = V::zero();
     }
 }
 

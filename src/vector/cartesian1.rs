@@ -81,7 +81,7 @@ impl<D> Neg for Cartesian1<D>
 impl<D> Vector<D> for Cartesian1<D>
     where D: Float + FromPrimitive
 {
-    fn space_nsphere(d: D) -> D {
+    fn space_ball(d: D) -> D {
         D::from_u32(2u32).unwrap() * d
     }
     fn dot(&lhs: &Self, rhs: &Self) -> D {
