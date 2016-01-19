@@ -5,14 +5,15 @@ use super::super::Vector;
 
 use std::cell::UnsafeCell;
 
+///BasicParticle is the simplest object that implements PhysicsParticle without using constant values.
 pub struct BasicParticle<V, D>
     where V: Vector<D>, D: Float
 {
-    quanta: D,
-    position: V,
-    velocity: V,
+    pub quanta: D,
+    pub inertia: D,
+    pub position: V,
+    pub velocity: V,
     force: UnsafeCell<V>,
-    inertia: D,
 }
 
 impl<V, D> BasicParticle<V, D>
@@ -21,10 +22,24 @@ impl<V, D> BasicParticle<V, D>
     pub fn new(quanta: D, position: V, velocity: V, inertia: D) -> Self {
         BasicParticle{
             quanta: quanta,
+            inertia: inertia,
             position: position,
             velocity: velocity,
             force: UnsafeCell::new(V::zero()),
-            inertia: inertia,
+        }
+    }
+}
+
+impl<V, D> Default for BasicParticle<V, D>
+    where V: Vector<D>, D: Float
+{
+    fn default() -> Self {
+        BasicParticle{
+            quanta: D::one(),
+            inertia: D::one(),
+            position: V::zero(),
+            velocity: V::zero(),
+            force: UnsafeCell::new(V::zero()),
         }
     }
 }

@@ -5,55 +5,56 @@ extern crate num;
 use self::num::Float;
 use super::vector::*;
 
-//An object that has quanta
+///An object that has quanta
 pub trait Quanta<D> {
     //Retrieve the quanta of a physics particle.
     fn quanta(&self) -> D;
 }
 
-//An object that has inertia
+///An object that has inertia
 pub trait Inertia<D> {
     //Retrieve the inertia of a physics particle.
     fn inertia(&self) -> D;
 }
 
-//An object that has location
+///An object that has location
 pub trait Position<V> {
     //Get position of particle.
     fn position(&self) -> V;
 }
 
-//An object that has velocity
+///An object that has velocity
 pub trait Velocity<V> {
     //Get velocity of particle.
     fn velocity(&self) -> V;
 }
 
-//An object that has a simple particle motion interface
+///An object that has a simple particle motion interface
 pub trait Particle<V, D>: Position<V> + Velocity<V> + Inertia<D> {
-    //Apply force to particle, but it isn't moved forward in time until advance is called.
-    //This requires interior mutability and unsafe declarations to fulfil.
+    ///Apply force to particle, but it isn't moved forward in time until advance is called.
+    ///This requires interior mutability and unsafe declarations to fulfil.
     fn impulse(&self, vec: &V);
-    //Advance particle forward in time (update position and velocity from net force).
+    ///Advance particle forward in time (update position and velocity from net force).
     fn advance(&mut self, time: D);
 }
 
+///Any particle that implements the necessary traits gains access to all of the capabilities of PhysicsParticle.
 pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     where V: Vector<D>, D: Float
 {
-    //Convert a PhysicsParticle into a "basic particle" that implements PhysicsParticle but has the minimum members.
-    //Use this to implement data structures that need to create intermediary particles.
+    ///Convert a PhysicsParticle into a "basic particle" that implements PhysicsParticle but has the minimum members.
+    ///Use this to implement data structures that need to create intermediary particles.
     fn basic_form(&self) -> BasicParticle<V, D> {
         BasicParticle::new(self.quanta(), self.position(), self.velocity(), self.inertia())
     }
 
-    //Apply drag forces to a particle.
+    ///Apply drag forces to a particle.
     fn drag(&self, magnitude: D) {
         let force = -self.velocity() * magnitude;
         self.impulse(&force);
     }
 
-    //Apply proper attraction to a single physics particle towards a location and with a magnitude.
+    ///Apply proper attraction to a single physics particle towards a location and with a magnitude.
     fn gravitate_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where T: Quanta<D> + Position<V>
     {
@@ -64,7 +65,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         self.impulse(&force);
     }
 
-    //This works the same as gravitate_radius_squared and gravitate_to.
+    ///This works the same as gravitate_radius_squared and gravitate_to.
     fn gravitate_radius_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where T: Quanta<D> + Position<V> + Ball<D>
     {
@@ -80,7 +81,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         self.impulse(&force);
     }
 
-    //Apply spring forces between one particle and a virtual particle that is unaffected.
+    ///Apply spring forces between one particle and a virtual particle that is unaffected.
     fn hooke_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where T: Quanta<D> + Position<V>
     {
@@ -90,7 +91,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         self.impulse(&force);
     }
 
-    //Apply spring forces between one particle and a virtual particle that is unaffected.
+    ///Apply spring forces between one particle and a virtual particle that is unaffected.
     fn hooke_equilibrium_to<T: ?Sized>(&self, center: &T, equilibrium: D, magnitude: D)
         where T: Quanta<D> + Position<V>
     {
@@ -100,7 +101,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         self.impulse(&force);
     }
 
-    //Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field.
+    ///Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field.
     fn lorentz_field(&self, field: &V)
         where V: CrossVector
     {
@@ -108,7 +109,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         self.impulse(&force);
     }
 
-    //Apply the lorentz force on a virtual particle that is unaffected.
+    ///Apply the lorentz force on a virtual particle that is unaffected.
     fn lorentz_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V>
     {
@@ -120,7 +121,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         self.impulse(&force);
     }
 
-    //Apply the lorentz force on a virtual particle that is unaffected.
+    ///Apply the lorentz force on a virtual particle that is unaffected.
     fn lorentz_radius_to<T: ?Sized>(&self, center: &T, magnitude: D)
         where V: CrossVector, T: Quanta<D> + Position<V> + Velocity<V> + Ball<D>
     {
@@ -138,7 +139,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     }
 }
 
-//Apply proper attraction between two physics particles based on their quanta and position.
+///Apply proper attraction between two physics particles based on their quanta and position.
 pub fn gravitate<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
@@ -158,12 +159,20 @@ pub fn gravitate<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     rhs.impulse(&-force);
 }
 
-/*
-If gravitating at a distance greater than the net radius, then gravitational interaction is applied as if the
-particles are point particles. If the distance is less than the radius, then the interaction happens as if the
-gravitational quanta (mass) is evenly distributed and gravitational flux is used instead, which causes the
-interaction to become proportional to the radius, meaning that as the radius approaches zero, so does the force.
-*/
+#[test]
+fn gravitate_test() {
+    type P = BasicParticle<Cartesian3<f64>, f64>;
+    let mut a = P::default();
+    let mut b = P::default();
+    gravitate(&a, &b, 1.0);
+    a.advance(1.0);
+    b.advance(1.0);
+}
+
+///If gravitating at a distance greater than the net radius, then gravitational interaction is applied as if the
+///particles are point particles. If the distance is less than the radius, then the interaction happens as if the
+///gravitational quanta (mass) is evenly distributed and gravitational flux is used instead, which causes the
+///interaction to become proportional to the radius, meaning that as the radius approaches zero, so does the force.
 pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D> + Ball<D>, T2: PhysicsParticle<V, D> + Ball<D>, V: Vector<D>, D: Float
 {
@@ -180,7 +189,7 @@ pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnit
     rhs.impulse(&-force);
 }
 
-//This is the same as the radius function, but the sum of the radii squared is passed separately to avoid overhead.
+///This is the same as the radius function, but the sum of the radii squared is passed separately to avoid overhead.
 pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
@@ -196,7 +205,7 @@ pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2
     rhs.impulse(&-force);
 }
 
-//Apply spring forces between two particles.
+///Apply spring forces between two particles.
 pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
@@ -206,7 +215,17 @@ pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     rhs.impulse(&-force);
 }
 
-//Apply spring forces between two particles with specified equilibrium distance.
+#[test]
+fn hooke_test() {
+    type P = BasicParticle<Cartesian3<f64>, f64>;
+    let mut a = P::default();
+    let mut b = P::default();
+    hooke(&a, &b, 1.0);
+    a.advance(1.0);
+    b.advance(1.0);
+}
+
+///Apply spring forces between two particles with specified equilibrium distance.
 pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, equilibrium: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
@@ -220,7 +239,7 @@ pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, equil
     rhs.impulse(&-force);
 }
 
-//Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity.
+///Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity.
 pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float
 {
@@ -233,7 +252,17 @@ pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     rhs.impulse(&force);
 }
 
-//Apply lorentz forces between two PhysicsParticle + Ball objects assuming uniformly distributed quanta.
+#[test]
+fn lorentz_test() {
+    type P = BasicParticle<Cartesian3<f64>, f64>;
+    let mut a = P::default();
+    let mut b = P::default();
+    lorentz(&a, &b, 1.0);
+    a.advance(1.0);
+    b.advance(1.0);
+}
+
+///Apply lorentz forces between two PhysicsParticle + Ball objects assuming uniformly distributed quanta.
 pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D> + Ball<D>, T2: PhysicsParticle<V, D> + Ball<D>, V: Vector<D> + CrossVector, D: Float
 {
@@ -252,7 +281,7 @@ pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitud
     rhs.impulse(&force);
 }
 
-//Apply lorentz forces between two PhysicsParticle objects using a precomputed net radius.
+///Apply lorentz forces between two PhysicsParticle objects using a precomputed net radius.
 pub fn lorentz_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float
 {
