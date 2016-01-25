@@ -3,6 +3,7 @@ use super::Vector;
 use self::num::{Float, Zero, FromPrimitive};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
+#[derive(Copy, Clone)]
 pub struct Cartesian1<D> {
     pub x: D
 }
@@ -24,14 +25,6 @@ impl<D> Zero for Cartesian1<D>
         self.x.is_zero()
     }
 }
-
-impl<D> Clone for Cartesian1<D> where D: Copy {
-    fn clone(&self) -> Self {
-        Cartesian1{x: self.x}
-    }
-}
-
-impl<D> Copy for Cartesian1<D> where D: Copy {}
 
 impl<D> Add for Cartesian1<D>
     where D: Float

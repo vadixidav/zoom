@@ -4,6 +4,7 @@ use self::num::{Float, Zero, FromPrimitive};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 use std::f64::consts::PI;
 
+#[derive(Copy, Clone)]
 pub struct Cartesian3<D> {
     pub x: D,
     pub y: D,
@@ -27,14 +28,6 @@ impl<D> Zero for Cartesian3<D>
         self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
     }
 }
-
-impl<D> Clone for Cartesian3<D> where D: Copy {
-    fn clone(&self) -> Self {
-        Cartesian3{x: self.x, y: self.y, z: self.z}
-    }
-}
-
-impl<D> Copy for Cartesian3<D> where D: Copy {}
 
 impl<D> Add for Cartesian3<D>
     where D: Float
