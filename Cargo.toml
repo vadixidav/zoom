@@ -1,8 +1,8 @@
 [package]
 name = "zoom"
-version = "1.0.1"
+version = "1.0.2"
 description = "A particle physics library with extensive generics"
-homepage = "https://vadixidav.github.io/zoom/zoom/"
+documentation = "https://vadixidav.github.io/zoom/zoom/"
 repository = "https://github.com/vadixidav/zoom"
 authors = ["Geordon Worley <vadixidav@gmail.com>"]
 keywords = ["physics", "particle", "simulation"]
