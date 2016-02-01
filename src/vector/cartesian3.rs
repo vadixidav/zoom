@@ -94,7 +94,7 @@ impl<D> Vector<D> for Cartesian3<D>
     }
 }
 
-impl <D> CrossVector for Cartesian3<D>
+impl<D> CrossVector for Cartesian3<D>
     where D: Float
 {
     fn cross(lhs: &Self, rhs: &Self) -> Self {

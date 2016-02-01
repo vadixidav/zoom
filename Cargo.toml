@@ -10,3 +10,4 @@ license = "BSD-2-Clause"
 
 [dependencies]
 num = "0.1.30"
+nalgebra = "0.5.1"

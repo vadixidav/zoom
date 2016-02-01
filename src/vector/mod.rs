@@ -10,8 +10,10 @@ pub use self::cartesian3::*;
 pub use self::space::*;
 
 extern crate num;
-use self::num::{Float, Zero};
+extern crate nalgebra as na;
+use self::num::{Float, Zero, FromPrimitive};
 use std::ops::{Add, Sub, Neg, Mul, Div};
+use std::f64::consts::PI;
 
 ///Trait that implements all the functions necessary for any n-dimensional particle.
 pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<Self, Output=Self> + Neg<Output=Self> +
@@ -61,4 +63,73 @@ pub trait CrossVector {
 fn cross_vector() {
     let a = Cartesian3::new(0.3, 0.5, 1.0);
     let _b = Cartesian3::cross(&a, &Cartesian3::new(1.0, 0.5, -2.0));
+}
+
+impl<D> Vector<D> for na::Vec1<D>
+    where D: Float + FromPrimitive
+{
+    fn space_ball(d: D) -> D {
+        D::from_u32(2u32).unwrap() * d
+    }
+    fn dot(&lhs: &Self, rhs: &Self) -> D {
+        lhs.x * rhs.x
+    }
+    fn space_box(&self) -> D {
+        self.x
+    }
+    fn displacement(&self) -> D {
+        self.x
+    }
+}
+
+impl<D> Vector<D> for na::Vec2<D>
+    where D: Float + FromPrimitive
+{
+    fn space_ball(d: D) -> D {
+        D::from_f64(PI).unwrap() * d * d
+    }
+    fn dot(&lhs: &Self, rhs: &Self) -> D {
+        lhs.x * rhs.x + lhs.y * rhs.y
+    }
+    fn space_box(&self) -> D {
+        self.x * self.y
+    }
+    fn displacement(&self) -> D {
+        self.displacement_squared().sqrt()
+    }
+    fn displacement_squared(&self) -> D {
+        self.x * self.x + self.y * self.y
+    }
+}
+
+impl<D> Vector<D> for na::Vec3<D>
+    where D: Float + FromPrimitive
+{
+    fn space_ball(d: D) -> D {
+        d * d * d * D::from_f64(4.0 / 3.0 * PI).unwrap()
+    }
+    fn dot(&lhs: &Self, rhs: &Self) -> D {
+        lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
+    }
+    fn space_box(&self) -> D {
+        self.x * self.y * self.z
+    }
+    fn displacement(&self) -> D {
+        self.displacement_squared().sqrt()
+    }
+    fn displacement_squared(&self) -> D {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+}
+
+impl<D> CrossVector for na::Vec3<D>
+    where D: Float
+{
+    fn cross(lhs: &Self, rhs: &Self) -> Self {
+        na::Vec3{
+            x: lhs.y * rhs.z - lhs.z * rhs.y,
+            y: lhs.z * rhs.x - lhs.x * rhs.z,
+            z: lhs.x * rhs.y - lhs.y * rhs.x,
+        }
+    }
 }
