@@ -86,9 +86,12 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         where T: Quanta<D> + Position<V>
     {
         let delta = center.position() - self.position();
-        let force = delta.normalized() * delta.displacement() *
-            magnitude * self.quanta() * center.quanta();
-        self.impulse(&force);
+        let mag = delta.displacement();
+        if mag.is_normal() {
+            let force = delta / mag * delta.displacement() *
+                magnitude * self.quanta() * center.quanta();
+            self.impulse(&force);
+        }
     }
 
     ///Apply spring forces between one particle and a virtual particle that is unaffected.
