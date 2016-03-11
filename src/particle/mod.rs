@@ -1,3 +1,5 @@
+//!Contains traits and methods for the operation of particle physics
+
 pub mod basic_particle;
 pub use self::basic_particle::*;
 

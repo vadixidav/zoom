@@ -1,4 +1,4 @@
-//!The vector module contains primitive objects and traits for performing vector geometry.
+//!Contains primitive objects and traits for performing vector geometry
 
 pub mod cartesian1;
 pub mod cartesian2;
@@ -15,7 +15,7 @@ use self::num::{Float, Zero, FromPrimitive};
 use std::ops::{Add, Sub, Neg, Mul, Div};
 use std::f64::consts::PI;
 
-///Trait that implements all the functions necessary for any n-dimensional particle.
+///Trait that implements all the functions necessary for any n-dimensional vector
 pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<Self, Output=Self> + Neg<Output=Self> +
     Mul<D, Output=Self> + Div<D, Output=Self>
     where D: Float
