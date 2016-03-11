@@ -63,8 +63,10 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         //Create delta vector from the particle to the center of attraction.
         let delta = center.position() - self.position();
         let distance = delta.displacement();
-        let force = delta / distance.powi(3) * magnitude * self.quanta() * center.quanta();
-        self.impulse(&force);
+        if distance.is_normal() {
+            let force = delta / distance.powi(3) * magnitude * self.quanta() * center.quanta();
+            self.impulse(&force);
+        }
     }
 
     ///This works the same as gravitate_radius_squared and gravitate_to.
@@ -74,13 +76,15 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         //Create delta vector from the particle to the center of attraction.
         let delta = center.position() - self.position();
         let distance_squared = delta.displacement_squared();
-        let force = delta * magnitude * self.quanta() * center.quanta() /
-            if distance_squared > center.radius().powi(2) {
-                distance_squared.sqrt().powi(3)
-            } else {
-                center.radius().powi(2)
-            };
-        self.impulse(&force);
+        if distance_squared.is_normal() {
+            let force = delta * magnitude * self.quanta() * center.quanta() /
+                if distance_squared > center.radius().powi(2) {
+                    distance_squared.sqrt().powi(3)
+                } else {
+                    center.radius().powi(2)
+                };
+            self.impulse(&force);
+        }
     }
 
     ///Apply spring forces between one particle and a virtual particle that is unaffected.
@@ -88,8 +92,7 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         where T: Quanta<D> + Position<V>
     {
         let delta = center.position() - self.position();
-        let force = delta.normalized() * delta.displacement() *
-            magnitude * self.quanta() * center.quanta();
+        let force = delta * magnitude * self.quanta() * center.quanta();
         self.impulse(&force);
     }
 
@@ -98,9 +101,12 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
         where T: Quanta<D> + Position<V>
     {
         let delta = center.position() - self.position();
-        let force = delta.normalized() * (delta.displacement() - equilibrium) *
-            magnitude * self.quanta() * center.quanta();
-        self.impulse(&force);
+        let displace = delta.displacement();
+        if displace.is_normal() {
+            let force = delta / displace * (displace - equilibrium) *
+                magnitude * self.quanta() * center.quanta();
+            self.impulse(&force);
+        }
     }
 
     ///Apply lorentz force to a particle in a field given by a vector with the magnitude and direction of the field.
@@ -117,10 +123,12 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     {
         let delta = center.position() - self.position();
         let distance_squared = delta.displacement_squared();
-        let force = V::cross(&V::cross(&self.velocity(), &delta), &center.velocity()) * magnitude *
-            self.quanta() * center.quanta() / distance_squared.sqrt().powi(3);
+        if distance_squared.is_normal() {
+            let force = V::cross(&V::cross(&self.velocity(), &delta), &center.velocity()) * magnitude *
+                self.quanta() * center.quanta() / distance_squared.sqrt().powi(3);
 
-        self.impulse(&force);
+            self.impulse(&force);
+        }
     }
 
     ///Apply the lorentz force on a virtual particle that is unaffected.
@@ -129,15 +137,17 @@ pub trait PhysicsParticle<V, D>: Particle<V, D> + Quanta<D> + Inertia<D>
     {
         let delta = center.position() - self.position();
         let distance_squared = delta.displacement_squared();
-        let force = V::cross(&V::cross(&self.velocity(), &delta), &center.velocity()) * magnitude *
-            self.quanta() * center.quanta() /
-            if distance_squared > center.radius().powi(2) {
-                distance_squared.sqrt().powi(3)
-            } else {
-                center.radius().powi(2)
-            };
+        if distance_squared.is_normal() {
+            let force = V::cross(&V::cross(&self.velocity(), &delta), &center.velocity()) * magnitude *
+                self.quanta() * center.quanta() /
+                if distance_squared > center.radius().powi(2) {
+                    distance_squared.sqrt().powi(3)
+                } else {
+                    center.radius().powi(2)
+                };
 
-        self.impulse(&force);
+            self.impulse(&force);
+        }
     }
 }
 
@@ -149,16 +159,18 @@ pub fn gravitate<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     let delta = rhs.position() - lhs.position();
     //Find the distance of the delta vector.
     let distance = delta.displacement();
-    //Dividing the delta vector by the distance cubed computes attractive force as per the inverse square law.
-    //The extra degree normalizes the direction vector to a unit vector.
-    let force = delta * magnitude / distance.powi(3) *
-    //Multiply by the two quanta of the objects to compute the final force.
-    lhs.quanta() * rhs.quanta();
+    if distance.is_normal() {
+        //Dividing the delta vector by the distance cubed computes attractive force as per the inverse square law.
+        //The extra degree normalizes the direction vector to a unit vector.
+        let force = delta * magnitude / distance.powi(3) *
+        //Multiply by the two quanta of the objects to compute the final force.
+        lhs.quanta() * rhs.quanta();
 
-    //Force lhs in the direction of force.
-    lhs.impulse(&force);
-    //Apply the inverse force to the rhs similarly.
-    rhs.impulse(&-force);
+        //Force lhs in the direction of force.
+        lhs.impulse(&force);
+        //Apply the inverse force to the rhs similarly.
+        rhs.impulse(&-force);
+    }
 }
 
 #[test]
@@ -180,15 +192,17 @@ pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnit
 {
     let delta = rhs.position() - lhs.position();
     let distance_squared = delta.displacement_squared();
-    let radius_squared = (lhs.radius() + rhs.radius()).powi(2);
-    //Force is the only thing that changes from normal gravitation.
-    let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
-        distance_squared.sqrt().powi(3)
-    } else {
-        radius_squared
-    };
-    lhs.impulse(&force);
-    rhs.impulse(&-force);
+    if distance_squared.is_normal() {
+        let radius_squared = (lhs.radius() + rhs.radius()).powi(2);
+        //Force is the only thing that changes from normal gravitation.
+        let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
+            distance_squared.sqrt().powi(3)
+        } else {
+            radius_squared
+        };
+        lhs.impulse(&force);
+        rhs.impulse(&-force);
+    }
 }
 
 ///This is the same as the radius function, but the sum of the radii squared is passed separately to avoid overhead.
@@ -197,14 +211,16 @@ pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2
 {
     let delta = rhs.position() - lhs.position();
     let distance_squared = delta.displacement_squared();
-    //Force is the only thing that changes from normal gravitation.
-    let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
-        distance_squared.sqrt().powi(3)
-    } else {
-        radius_squared
-    };
-    lhs.impulse(&force);
-    rhs.impulse(&-force);
+    if distance_squared.is_normal() {
+        //Force is the only thing that changes from normal gravitation.
+        let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
+            distance_squared.sqrt().powi(3)
+        } else {
+            radius_squared
+        };
+        lhs.impulse(&force);
+        rhs.impulse(&-force);
+    }
 }
 
 ///Apply spring forces between two particles.
@@ -212,7 +228,7 @@ pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
-    let force = delta.normalized() * magnitude * delta.displacement() * lhs.quanta() * rhs.quanta();
+    let force = delta * magnitude * lhs.quanta() * rhs.quanta();
     lhs.impulse(&force);
     rhs.impulse(&-force);
 }
@@ -232,13 +248,16 @@ pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, equil
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
-    let force = delta.normalized() * magnitude *
-        //We scale such that if displacement is greater than equilibrium, the particles attract proportionally.
-        //Particles with a displacement smaller than equilibrium repel each other.
-        (delta.displacement() - equilibrium) *
-        lhs.quanta() * rhs.quanta();
-    lhs.impulse(&force);
-    rhs.impulse(&-force);
+    let displace = delta.displacement();
+    if displace.is_normal() {
+        let force = delta / displace * magnitude *
+            //We scale such that if displacement is greater than equilibrium, the particles attract proportionally.
+            //Particles with a displacement smaller than equilibrium repel each other.
+            (displace - equilibrium) *
+            lhs.quanta() * rhs.quanta();
+        lhs.impulse(&force);
+        rhs.impulse(&-force);
+    }
 }
 
 ///Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity.
@@ -247,11 +266,13 @@ pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
 {
     let delta = rhs.position() - lhs.position();
     let distance = delta.displacement();
-    let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) *
-        lhs.quanta() * rhs.quanta() / distance.powi(3) * magnitude;
+    if distance.is_normal() {
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) *
+            lhs.quanta() * rhs.quanta() / distance.powi(3) * magnitude;
 
-    lhs.impulse(&-force);
-    rhs.impulse(&force);
+        lhs.impulse(&-force);
+        rhs.impulse(&force);
+    }
 }
 
 #[test]
@@ -270,17 +291,19 @@ pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitud
 {
     let delta = rhs.position() - lhs.position();
     let distance_squared = delta.displacement_squared();
-    let radius_squared = (lhs.radius() + rhs.radius()).powi(2);
-    let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
-        lhs.quanta() * rhs.quanta() /
-        if distance_squared > radius_squared {
-            distance_squared.sqrt().powi(3)
-        } else {
-            radius_squared
-        };
+    if distance_squared.is_normal() {
+        let radius_squared = (lhs.radius() + rhs.radius()).powi(2);
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * rhs.quanta() /
+            if distance_squared > radius_squared {
+                distance_squared.sqrt().powi(3)
+            } else {
+                radius_squared
+            };
 
-    lhs.impulse(&-force);
-    rhs.impulse(&force);
+        lhs.impulse(&-force);
+        rhs.impulse(&force);
+    }
 }
 
 ///Apply lorentz forces between two PhysicsParticle objects using a precomputed net radius.
@@ -289,14 +312,16 @@ pub fn lorentz_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, 
 {
     let delta = rhs.position() - lhs.position();
     let distance_squared = delta.displacement_squared();
-    let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
-        lhs.quanta() * rhs.quanta() /
-        if distance_squared > radius_squared {
-            distance_squared.sqrt().powi(3)
-        } else {
-            radius_squared
-        };
+    if distance_squared.is_normal() {
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * rhs.quanta() /
+            if distance_squared > radius_squared {
+                distance_squared.sqrt().powi(3)
+            } else {
+                radius_squared
+            };
 
-    lhs.impulse(&-force);
-    rhs.impulse(&force);
+        lhs.impulse(&-force);
+        rhs.impulse(&force);
+    }
 }
