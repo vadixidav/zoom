@@ -173,6 +173,28 @@ pub fn gravitate<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     }
 }
 
+///Use a special comp_delta closure to compute the delta from the first to the second param
+pub fn gravitate_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float, F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
+    //Find the distance of the delta vector.
+    let distance = delta.displacement();
+    if distance.is_normal() {
+        //Dividing the delta vector by the distance cubed computes attractive force as per the inverse square law.
+        //The extra degree normalizes the direction vector to a unit vector.
+        let force = delta * magnitude / distance.powi(3) *
+        //Multiply by the two quanta of the objects to compute the final force.
+        lhs.quanta() * rhs.quanta();
+
+        //Force lhs in the direction of force.
+        lhs.impulse(&force);
+        //Apply the inverse force to the rhs similarly.
+        rhs.impulse(&-force);
+    }
+}
+
 #[test]
 fn gravitate_test() {
     type P = BasicParticle<Cartesian3<f64>, f64>;
@@ -205,6 +227,27 @@ pub fn gravitate_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnit
     }
 }
 
+///Same as gravitate_radius, but uses a special comp_delta closure to compute the delta between the particles
+pub fn gravitate_radius_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D> + Ball<D>, T2: PhysicsParticle<V, D> + Ball<D>, V: Vector<D>, D: Float,
+    F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
+    let distance_squared = delta.displacement_squared();
+    if distance_squared.is_normal() {
+        let radius_squared = (lhs.radius() + rhs.radius()).powi(2);
+        //Force is the only thing that changes from normal gravitation.
+        let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
+            distance_squared.sqrt().powi(3)
+        } else {
+            radius_squared
+        };
+        lhs.impulse(&force);
+        rhs.impulse(&-force);
+    }
+}
+
 ///This is the same as the radius function, but the sum of the radii squared is passed separately to avoid overhead.
 pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
@@ -223,11 +266,42 @@ pub fn gravitate_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2
     }
 }
 
+///Same as gravitate_radius_squared, but uses a special comp_delta closure to compute the delta between the particles
+pub fn gravitate_radius_squared_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D,
+    magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float, F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
+    let distance_squared = delta.displacement_squared();
+    if distance_squared.is_normal() {
+        //Force is the only thing that changes from normal gravitation.
+        let force = delta * magnitude * lhs.quanta() * rhs.quanta() / if distance_squared > radius_squared {
+            distance_squared.sqrt().powi(3)
+        } else {
+            radius_squared
+        };
+        lhs.impulse(&force);
+        rhs.impulse(&-force);
+    }
+}
+
 ///Apply spring forces between two particles.
 pub fn hooke<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float
 {
     let delta = rhs.position() - lhs.position();
+    let force = delta * magnitude * lhs.quanta() * rhs.quanta();
+    lhs.impulse(&force);
+    rhs.impulse(&-force);
+}
+
+///Same as hooke, but uses a comp_delta closure to compute the distance from the first to second parameter
+pub fn hooke_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float, F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
     let force = delta * magnitude * lhs.quanta() * rhs.quanta();
     lhs.impulse(&force);
     rhs.impulse(&-force);
@@ -260,11 +334,47 @@ pub fn hooke_equilibrium<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, equil
     }
 }
 
+///Same as hooke_equilibrium, but uses a comp_delta closure to compute the distance from the first to second parameter
+pub fn hooke_equilibrium_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, equilibrium: D, magnitude: D,
+    comp_delta: F)
+    where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D>, D: Float, F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
+    let displace = delta.displacement();
+    if displace.is_normal() {
+        let force = delta / displace * magnitude *
+            //We scale such that if displacement is greater than equilibrium, the particles attract proportionally.
+            //Particles with a displacement smaller than equilibrium repel each other.
+            (displace - equilibrium) *
+            lhs.quanta() * rhs.quanta();
+        lhs.impulse(&force);
+        rhs.impulse(&-force);
+    }
+}
+
 ///Apply lorentz forces between two PhysicsParticle objects based on quanta, position, and velocity.
 pub fn lorentz<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float
 {
     let delta = rhs.position() - lhs.position();
+    let distance = delta.displacement();
+    if distance.is_normal() {
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) *
+            lhs.quanta() * rhs.quanta() / distance.powi(3) * magnitude;
+
+        lhs.impulse(&-force);
+        rhs.impulse(&force);
+    }
+}
+
+///Same as lorentz, but uses a comp_delta closure to compute the distance from the first to second parameter
+pub fn lorentz_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float,
+    F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
     let distance = delta.displacement();
     if distance.is_normal() {
         let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) *
@@ -306,11 +416,57 @@ pub fn lorentz_radius<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitud
     }
 }
 
+///Same as lorentz_radius, but uses a comp_delta closure to compute the distance from the first to second parameter
+pub fn lorentz_radius_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D> + Ball<D>, T2: PhysicsParticle<V, D> + Ball<D>, V: Vector<D> + CrossVector,
+    D: Float, F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
+    let distance_squared = delta.displacement_squared();
+    if distance_squared.is_normal() {
+        let radius_squared = (lhs.radius() + rhs.radius()).powi(2);
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * rhs.quanta() /
+            if distance_squared > radius_squared {
+                distance_squared.sqrt().powi(3)
+            } else {
+                radius_squared
+            };
+
+        lhs.impulse(&-force);
+        rhs.impulse(&force);
+    }
+}
+
 ///Apply lorentz forces between two PhysicsParticle objects using a precomputed net radius.
 pub fn lorentz_radius_squared<V, D, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D, magnitude: D)
     where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float
 {
     let delta = rhs.position() - lhs.position();
+    let distance_squared = delta.displacement_squared();
+    if distance_squared.is_normal() {
+        let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
+            lhs.quanta() * rhs.quanta() /
+            if distance_squared > radius_squared {
+                distance_squared.sqrt().powi(3)
+            } else {
+                radius_squared
+            };
+
+        lhs.impulse(&-force);
+        rhs.impulse(&force);
+    }
+}
+
+///Same as lorentz_radius_squared, but uses a comp_delta closure to compute the distance between the particles
+pub fn lorentz_radius_squared_delta<V, D, F, T1: ?Sized, T2: ?Sized>(lhs: &T1, rhs: &T2, radius_squared: D,
+    magnitude: D, comp_delta: F)
+    where T1: PhysicsParticle<V, D>, T2: PhysicsParticle<V, D>, V: Vector<D> + CrossVector, D: Float,
+    F: FnOnce(V, V) -> V
+{
+    //Create delta vector between the two positions.
+    let delta = comp_delta(lhs.position(), rhs.position());
     let distance_squared = delta.displacement_squared();
     if distance_squared.is_normal() {
         let force = V::cross(&rhs.velocity(), &V::cross(&lhs.velocity(), &delta)) * magnitude *
