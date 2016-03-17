@@ -1,6 +1,6 @@
 [package]
 name = "zoom"
-version = "2.0.0"
+version = "1.4.0"
 description = "A particle physics library with extensive generics"
 documentation = "https://vadixidav.github.io/zoom/zoom/"
 repository = "https://github.com/vadixidav/zoom"
