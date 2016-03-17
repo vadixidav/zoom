@@ -46,12 +46,28 @@ impl<V> Box<V> {
     }
 }
 
+fn wrap_scalar<D>(pos: D, bound: D) -> D where D: Float + FromPrimitive {
+    // Bound must be positive
+    let bound = bound.abs();
+    let twobound = D::from_u32(2u32).unwrap() * bound;
+    // Create shrunk_pos, which may still not be inside the space, but is within one stride of it
+    let shrunk_pos = pos % twobound;
+
+    if shrunk_pos < -bound {
+        shrunk_pos + twobound
+    } else if shrunk_pos > bound {
+        shrunk_pos - twobound
+    } else {
+        shrunk_pos
+    }
+}
+
 impl<D> Toroid<Cartesian1<D>> for Box<Cartesian1<D>>
     where D: Float + FromPrimitive
 {
     fn wrap_delta(&self, delta: Cartesian1<D>) -> Cartesian1<D> {
         Cartesian1{
-            x: delta.x % (D::from_u32(2u32).unwrap() * self.offset.x),
+            x: wrap_scalar(delta.x, self.offset.x),
         }
     }
 
@@ -65,8 +81,8 @@ impl<D> Toroid<Cartesian2<D>> for Box<Cartesian2<D>>
 {
     fn wrap_delta(&self, delta: Cartesian2<D>) -> Cartesian2<D> {
         Cartesian2{
-            x: delta.x % (D::from_u32(2u32).unwrap() * self.offset.x),
-            y: delta.y % (D::from_u32(2u32).unwrap() * self.offset.y),
+            x: wrap_scalar(delta.x, self.offset.x),
+            y: wrap_scalar(delta.y, self.offset.y),
         }
     }
 
@@ -80,9 +96,9 @@ impl<D> Toroid<Cartesian3<D>> for Box<Cartesian3<D>>
 {
     fn wrap_delta(&self, delta: Cartesian3<D>) -> Cartesian3<D> {
         Cartesian3{
-            x: delta.x % (D::from_u32(2u32).unwrap() * self.offset.x),
-            y: delta.y % (D::from_u32(2u32).unwrap() * self.offset.y),
-            z: delta.z % (D::from_u32(2u32).unwrap() * self.offset.z),
+            x: wrap_scalar(delta.x, self.offset.x),
+            y: wrap_scalar(delta.y, self.offset.y),
+            z: wrap_scalar(delta.z, self.offset.z),
         }
     }
 
@@ -96,7 +112,7 @@ impl<D> Toroid<na::Vec1<D>> for Box<na::Vec1<D>>
 {
     fn wrap_delta(&self, delta: na::Vec1<D>) -> na::Vec1<D> {
         na::Vec1{
-            x: delta.x % (D::from_u32(2u32).unwrap() * self.offset.x),
+            x: wrap_scalar(delta.x, self.offset.x),
         }
     }
 
@@ -110,8 +126,8 @@ impl<D> Toroid<na::Vec2<D>> for Box<na::Vec2<D>>
 {
     fn wrap_delta(&self, delta: na::Vec2<D>) -> na::Vec2<D> {
         na::Vec2{
-            x: delta.x % (D::from_u32(2u32).unwrap() * self.offset.x),
-            y: delta.y % (D::from_u32(2u32).unwrap() * self.offset.y),
+            x: wrap_scalar(delta.x, self.offset.x),
+            y: wrap_scalar(delta.y, self.offset.y),
         }
     }
 
@@ -125,9 +141,9 @@ impl<D> Toroid<na::Vec3<D>> for Box<na::Vec3<D>>
 {
     fn wrap_delta(&self, delta: na::Vec3<D>) -> na::Vec3<D> {
         na::Vec3{
-            x: delta.x % (D::from_u32(2u32).unwrap() * self.offset.x),
-            y: delta.y % (D::from_u32(2u32).unwrap() * self.offset.y),
-            z: delta.z % (D::from_u32(2u32).unwrap() * self.offset.z),
+            x: wrap_scalar(delta.x, self.offset.x),
+            y: wrap_scalar(delta.y, self.offset.y),
+            z: wrap_scalar(delta.z, self.offset.z),
         }
     }
 
