@@ -24,7 +24,7 @@ pub trait Vector<D>: Sized + Clone + Copy + Zero + Add<Self, Output=Self> + Sub<
     fn space_ball(d: D) -> D;
 
     ///Returns the result of the cos of the angle between two vectors multiplied by their magnitudes
-    fn dot(&lhs: &Self, rhs: &Self) -> D;
+    fn dot(lhs: &Self, rhs: &Self) -> D;
 
     ///Returns the space contained by the vector relative to the origin forming a box
     fn space_box(&self) -> D;
@@ -65,7 +65,7 @@ fn cross_vector() {
     let _b = Cartesian3::cross(&a, &Cartesian3::new(1.0, 0.5, -2.0));
 }
 
-impl<D> Vector<D> for na::Vec1<D>
+impl<D> Vector<D> for na::Vector1<D>
     where D: Float + FromPrimitive
 {
     fn space_ball(d: D) -> D {
@@ -82,7 +82,7 @@ impl<D> Vector<D> for na::Vec1<D>
     }
 }
 
-impl<D> Vector<D> for na::Vec2<D>
+impl<D> Vector<D> for na::Vector2<D>
     where D: Float + FromPrimitive
 {
     fn space_ball(d: D) -> D {
@@ -102,7 +102,7 @@ impl<D> Vector<D> for na::Vec2<D>
     }
 }
 
-impl<D> Vector<D> for na::Vec3<D>
+impl<D> Vector<D> for na::Vector3<D>
     where D: Float + FromPrimitive
 {
     fn space_ball(d: D) -> D {
@@ -122,11 +122,11 @@ impl<D> Vector<D> for na::Vec3<D>
     }
 }
 
-impl<D> CrossVector for na::Vec3<D>
+impl<D> CrossVector for na::Vector3<D>
     where D: Float
 {
     fn cross(lhs: &Self, rhs: &Self) -> Self {
-        na::Vec3{
+        na::Vector3{
             x: lhs.y * rhs.z - lhs.z * rhs.y,
             y: lhs.z * rhs.x - lhs.x * rhs.z,
             z: lhs.x * rhs.y - lhs.y * rhs.x,

@@ -107,47 +107,47 @@ impl<D> Toroid<Cartesian3<D>> for Box<Cartesian3<D>>
     }
 }
 
-impl<D> Toroid<na::Vec1<D>> for Box<na::Vec1<D>>
+impl<D> Toroid<na::Vector1<D>> for Box<na::Vector1<D>>
     where D: Float + FromPrimitive
 {
-    fn wrap_delta(&self, delta: na::Vec1<D>) -> na::Vec1<D> {
-        na::Vec1{
+    fn wrap_delta(&self, delta: na::Vector1<D>) -> na::Vector1<D> {
+        na::Vector1{
             x: wrap_scalar(delta.x, self.offset.x),
         }
     }
 
-    fn wrap_position(&self, pos: na::Vec1<D>) -> na::Vec1<D> {
+    fn wrap_position(&self, pos: na::Vector1<D>) -> na::Vector1<D> {
         self.wrap_delta(pos - self.origin) + self.origin
     }
 }
 
-impl<D> Toroid<na::Vec2<D>> for Box<na::Vec2<D>>
+impl<D> Toroid<na::Vector2<D>> for Box<na::Vector2<D>>
     where D: Float + FromPrimitive
 {
-    fn wrap_delta(&self, delta: na::Vec2<D>) -> na::Vec2<D> {
-        na::Vec2{
+    fn wrap_delta(&self, delta: na::Vector2<D>) -> na::Vector2<D> {
+        na::Vector2{
             x: wrap_scalar(delta.x, self.offset.x),
             y: wrap_scalar(delta.y, self.offset.y),
         }
     }
 
-    fn wrap_position(&self, pos: na::Vec2<D>) -> na::Vec2<D> {
+    fn wrap_position(&self, pos: na::Vector2<D>) -> na::Vector2<D> {
         self.wrap_delta(pos - self.origin) + self.origin
     }
 }
 
-impl<D> Toroid<na::Vec3<D>> for Box<na::Vec3<D>>
+impl<D> Toroid<na::Vector3<D>> for Box<na::Vector3<D>>
     where D: Float + FromPrimitive
 {
-    fn wrap_delta(&self, delta: na::Vec3<D>) -> na::Vec3<D> {
-        na::Vec3{
+    fn wrap_delta(&self, delta: na::Vector3<D>) -> na::Vector3<D> {
+        na::Vector3{
             x: wrap_scalar(delta.x, self.offset.x),
             y: wrap_scalar(delta.y, self.offset.y),
             z: wrap_scalar(delta.z, self.offset.z),
         }
     }
 
-    fn wrap_position(&self, pos: na::Vec3<D>) -> na::Vec3<D> {
+    fn wrap_position(&self, pos: na::Vector3<D>) -> na::Vector3<D> {
         self.wrap_delta(pos - self.origin) + self.origin
     }
 }
