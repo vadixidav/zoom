@@ -13,3 +13,7 @@ Cargo.lock
 
 # Eclipse project
 .project
+
+/**/.idea/
+/**/*.bk
+/**/*.iml
