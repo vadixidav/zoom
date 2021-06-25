@@ -1,5 +1,12 @@
 # zoom
+
 A library for Rust particle physics
+
+## Warning
+
+This project is highly out-of-date and not designed for large or high-performance simulations. If you are interested in Rust particle simulations, please look at https://rapier.rs/.
+
+## About
 
 The goal of this library is to handle all particle interactions needed in a particle system in a generic way. Traits will be created for particles that allow them to be stored into octrees and quadtrees. This library will also provide Barnes-Hut trees for efficient simulations of charged or gravitational particle simulations. Eventually, support for GPU acceleration will be added, but this may require an API change.
 
